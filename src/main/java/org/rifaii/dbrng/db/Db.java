@@ -68,7 +68,7 @@ public class Db {
                 column.columnName = columnName;
                 column.isNullable = isNullable;
                 column.columnType = type;
-                column.columnSize = columnSize;
+                column.columnSize = columnSize > 0 ? columnSize : 5;
 
                 tables.computeIfAbsent(tableName, k -> new Table(tableName))
                     .addColumn(column);

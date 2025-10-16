@@ -39,7 +39,7 @@ public class Generator {
             switch (c.columnType) {
                 case "CHARACTER VARYING", "TEXT" -> plan.add(() -> new String(generateString(c.columnSize)));
                 case "TIMESTAMP WITH TIME ZONE" -> plan.add(() -> formattedDate);
-                case "NUMERIC", "BIGINT" -> plan.add(() -> String.valueOf(random.nextInt()));
+                case "NUMERIC", "BIGINT" -> plan.add(() -> String.valueOf(random.nextInt((int) Math.pow(10, c.columnSize))));
                 default -> plan.add(() -> "");
             }
         });
