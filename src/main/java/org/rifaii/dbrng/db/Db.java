@@ -1,10 +1,18 @@
 package org.rifaii.dbrng.db;
 
+import org.postgresql.copy.CopyManager;
+import org.postgresql.core.BaseConnection;
+import org.rifaii.dbrng.CsvIteratorInputStream;
+import org.rifaii.dbrng.CsvRowIterator;
 import org.rifaii.dbrng.Static;
 import org.rifaii.dbrng.db.object.Column;
 import org.rifaii.dbrng.db.object.DbIntrospection;
 import org.rifaii.dbrng.db.object.Table;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -68,6 +76,19 @@ public class Db {
 
             return new DbIntrospection(tables.values());
         } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void copy(Table table, CsvRowIterator iterator) {
+        try (Connection conn = getConnection()) {
+            long rowsInserted = new CopyManager((BaseConnection) conn)
+                .copyIn(
+                    "COPY %s FROM STDIN (FORMAT csv)".formatted(table.tableName),
+                    new CsvIteratorInputStream(iterator)
+                );
+            System.out.printf("%d row(s) inserted%n", rowsInserted);
+        } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
         }
     }

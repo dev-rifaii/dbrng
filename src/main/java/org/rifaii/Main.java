@@ -31,12 +31,12 @@ public class Main {
         dbIntrospection.getTables()
             .forEach(table -> {
                 var start = LocalTime.now();
-                CsvRowIterator generate = Generator.generate(table.getColumns(), 1_000_000);
-                while (generate.hasNext()) {
-                    String next = generate.next();
-//                    System.out.println(next);
-                    it.add(next);
-                }
+                CsvRowIterator generate = Generator.generate(table.getColumns(), 10);
+//                while (generate.hasNext()) {
+//                    String next = generate.next();
+//                    it.add(next);
+//                }
+                db.copy(table, generate);
                 var end = LocalTime.now();
                 System.out.printf("=====%s=====%n", table.tableName);
                 System.out.println("Started at " + start);
