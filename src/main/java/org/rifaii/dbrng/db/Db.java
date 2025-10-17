@@ -9,12 +9,10 @@ import org.rifaii.dbrng.db.object.Column;
 import org.rifaii.dbrng.db.object.DbIntrospection;
 import org.rifaii.dbrng.db.object.Table;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -22,25 +20,15 @@ import java.util.Map;
 
 public class Db {
 
-    private final String username;
-    private final String password;
-    private final String host;
-    private final String port;
-    private final String database;
     private final String schema;
 
     private final String connectionUrl;
 
     public Db(String username, String password, String host, String port, String database, String schema) {
-        this.username = username;
-        this.password = password;
-        this.host = host;
-        this.port = port;
-        this.database = database;
         this.schema = schema;
 
         connectionUrl = "jdbc:postgresql://%s:%s/%s?user=%s&password=%s&ssl=false"
-            .formatted(host, port, database, username, password);
+            .formatted("localhost", port, database, username, password);
     }
 
     private Connection getConnection() throws SQLException {
@@ -75,7 +63,20 @@ public class Db {
                     .addColumn(column);
             }
 
+            tables.keySet().forEach(this::truncateTable);
+
             return new DbIntrospection(tables.values());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void truncateTable(String tableName) {
+        try (Connection connection = getConnection()) {
+            System.out.println("Truncating table " + tableName);
+            PreparedStatement preparedStatement = connection.prepareStatement("TRUNCATE TABLE %s CASCADE;".formatted(tableName));
+            preparedStatement.execute();
+            preparedStatement.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

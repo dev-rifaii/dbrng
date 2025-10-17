@@ -24,8 +24,6 @@ public class Main {
             System.exit(1);
         }
 
-        Set<String> it = new HashSet<>();
-
         var fullGenerationStart = LocalTime.now();
 
         dbIntrospection.getTables()
@@ -34,11 +32,7 @@ public class Main {
             .filter(table -> !List.of("purchased_product").contains(table.tableName))
             .forEach(table -> {
                 var start = LocalTime.now();
-                CsvRowIterator generate = Generator.generate(table.getColumns(), 10_000);
-//                while (generate.hasNext()) {
-//                    String next = generate.next();
-//                    it.add(next);
-//                }
+                CsvRowIterator generate = Generator.generate(table.getColumns(), 1_000_000);
                 db.copy(table, generate);
                 var end = LocalTime.now();
                 System.out.printf("=====%s=====%n", table.tableName);
@@ -48,7 +42,6 @@ public class Main {
 
         var fullGenerationEnd = LocalTime.now();
 
-        System.out.println("Generated " + it.size() + " columns in database.");
         System.out.println("Started at " + fullGenerationStart);
         System.out.println("Ended at " + fullGenerationEnd);
 
