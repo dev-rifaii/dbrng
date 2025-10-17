@@ -76,6 +76,18 @@ public class Static {
         return columns;
     }
 
+    public static final String QUERY_PRIMARY_KEYS =
+        """
+        SELECT
+            tc.table_name,
+            kcu.column_name
+        FROM information_schema.table_constraints tc
+                 JOIN information_schema.key_column_usage kcu
+                      ON tc.constraint_name = kcu.constraint_name
+        WHERE tc.constraint_type = 'PRIMARY KEY'
+          AND tc.table_schema = '%s';
+        """;
+
     public static final String QUERY_SCHEMA_INTROSPECT
         = """
         SELECT
@@ -89,7 +101,7 @@ public class Static {
             c.numeric_scale
         FROM information_schema.columns c
         WHERE
-            c.table_schema = 'public'
+            c.table_schema = '%s'
         AND table_name NOT IN ('databasechangelog', 'databasechangeloglock')
         ORDER BY c.table_name, c.ordinal_position;
         """;

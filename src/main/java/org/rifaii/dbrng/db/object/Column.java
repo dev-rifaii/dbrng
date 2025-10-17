@@ -6,5 +6,6 @@ public class Column {
     public String columnType;
     public int columnSize;
     public boolean isNullable;
+    public boolean isPrimaryKey;
 
 }

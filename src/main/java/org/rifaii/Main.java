@@ -29,9 +29,12 @@ public class Main {
         var fullGenerationStart = LocalTime.now();
 
         dbIntrospection.getTables()
+            .stream()
+            //////////// remove ////////////////
+            .filter(table -> !List.of("purchased_product").contains(table.tableName))
             .forEach(table -> {
                 var start = LocalTime.now();
-                CsvRowIterator generate = Generator.generate(table.getColumns(), 10);
+                CsvRowIterator generate = Generator.generate(table.getColumns(), 10_000);
 //                while (generate.hasNext()) {
 //                    String next = generate.next();
 //                    it.add(next);

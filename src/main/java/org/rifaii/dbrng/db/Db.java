@@ -49,9 +49,9 @@ public class Db {
 
     public DbIntrospection introspectSchema() {
         try (Connection connection = getConnection()) {
-            ResultSet resultSet = connection.prepareStatement(Static.QUERY_SCHEMA_INTROSPECT)
+            ResultSet resultSet = connection.prepareStatement(Static.QUERY_SCHEMA_INTROSPECT.formatted(schema))
                 .executeQuery();
-            System.out.println(resultSet);
+            Map<String, String> primaryKeys = getPrimaryKeys();
 
             Map<String, Table> tables = new HashMap<>();
 
@@ -69,6 +69,7 @@ public class Db {
                 column.isNullable = isNullable;
                 column.columnType = type;
                 column.columnSize = columnSize > 0 ? columnSize : 5;
+                column.isPrimaryKey = primaryKeys.containsKey(tableName) && primaryKeys.get(tableName).equals(columnName);
 
                 tables.computeIfAbsent(tableName, k -> new Table(tableName))
                     .addColumn(column);
@@ -100,6 +101,26 @@ public class Db {
         } catch (SQLException e) {
             return false;
         }
+    }
+
+    private Map<String, String> getPrimaryKeys() {
+      try (Connection connection = getConnection()) {
+        ResultSet resultSet = connection.prepareStatement(Static.QUERY_PRIMARY_KEYS.formatted(schema))
+            .executeQuery();
+
+        Map<String, String> tables = new HashMap<>();
+
+        while (resultSet.next()) {
+          String tableName =  resultSet.getString("table_name");
+          String columnName =  resultSet.getString("column_name");
+
+          tables.put(tableName, columnName);
+        }
+
+        return tables;
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
     }
 
 }

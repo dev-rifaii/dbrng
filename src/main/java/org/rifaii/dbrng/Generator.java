@@ -32,14 +32,15 @@ public class Generator {
 
     public static CsvRowIterator generate(List<Column> columnDetails, int rowsNum) {
         List<Supplier<String>> plan = new ArrayList<>();
-        var random = new Random();
+        var random = new Random(System.currentTimeMillis());
         String formattedDate = formatter.format(LocalDateTime.now());
+        int pkCounter = 0;
 
         columnDetails.forEach(c -> {
             switch (c.columnType) {
                 case "CHARACTER VARYING", "TEXT" -> plan.add(() -> new String(generateString(c.columnSize)));
                 case "TIMESTAMP WITH TIME ZONE" -> plan.add(() -> formattedDate);
-                case "NUMERIC", "BIGINT" -> plan.add(() -> String.valueOf(random.nextInt((int) Math.pow(10, c.columnSize))));
+                case "NUMERIC", "BIGINT" -> plan.add(() -> String.valueOf(random.nextInt(Integer.MAX_VALUE)));
                 default -> plan.add(() -> "");
             }
         });
