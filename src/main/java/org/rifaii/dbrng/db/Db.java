@@ -7,6 +7,7 @@ import org.rifaii.dbrng.CsvRowIterator;
 import org.rifaii.dbrng.Static;
 import org.rifaii.dbrng.db.object.Column;
 import org.rifaii.dbrng.db.object.DbIntrospection;
+import org.rifaii.dbrng.db.object.ForeignKey;
 import org.rifaii.dbrng.db.object.Table;
 
 import java.io.IOException;
@@ -15,7 +16,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Db {
@@ -44,26 +47,30 @@ public class Db {
             Map<String, Table> tables = new HashMap<>();
 
             while (resultSet.next()) {
-                String tableName =  resultSet.getString("table_name");
-                String columnName =  resultSet.getString("column_name");
-                boolean isNullable =  resultSet.getBoolean("nullable");
-                String columnDefault =  resultSet.getString("column_default");
-                String type =  resultSet.getString("data_type");
-                int columnSize =  resultSet.getInt("character_maximum_length");
-                int numericPrecision =  resultSet.getInt("numeric_precision");
+                String tableName = resultSet.getString("table_name");
+                String columnName = resultSet.getString("column_name");
+                boolean isNullable = resultSet.getBoolean("nullable");
+                String columnDefault = resultSet.getString("column_default");
+                String type = resultSet.getString("data_type");
+                int columnSize = resultSet.getInt("character_maximum_length");
+                int numericPrecision = resultSet.getInt("numeric_precision");
 
                 var column = new Column();
                 column.columnName = columnName;
                 column.isNullable = isNullable;
                 column.columnType = type;
-                column.columnSize = columnSize > 0 ? columnSize : 5;
-                column.isPrimaryKey = primaryKeys.containsKey(tableName) && primaryKeys.get(tableName).equals(columnName);
+                column.columnSize = columnSize > 0
+                    ? columnSize
+                    : 5;
+                column.isPrimaryKey = primaryKeys.containsKey(tableName) && primaryKeys.get(tableName)
+                    .equals(columnName);
 
                 tables.computeIfAbsent(tableName, k -> new Table(tableName))
                     .addColumn(column);
             }
 
-            tables.keySet().forEach(this::truncateTable);
+            tables.keySet()
+                .forEach(this::truncateTable);
 
             return new DbIntrospection(tables.values());
         } catch (SQLException e) {
@@ -97,31 +104,71 @@ public class Db {
 
     public boolean isValidConnection() {
         try (Connection connection = getConnection()) {
-            connection.prepareStatement("SELECT 1").executeQuery();
+            connection.prepareStatement("SELECT 1")
+                .executeQuery();
             return true;
         } catch (SQLException e) {
             return false;
         }
     }
 
-    private Map<String, String> getPrimaryKeys() {
-      try (Connection connection = getConnection()) {
-        ResultSet resultSet = connection.prepareStatement(Static.QUERY_PRIMARY_KEYS.formatted(schema))
-            .executeQuery();
+    private void getForeignKeys() {
+        Map<String, List<ForeignKey>> foreignKeys = new HashMap<>();
 
-        Map<String, String> tables = new HashMap<>();
+        try (Connection connection = getConnection()) {
+            ResultSet resultSet = connection
+                .prepareStatement(Static.QUERY_FOREIGN_KEYS.formatted(schema))
+                .executeQuery();
 
-        while (resultSet.next()) {
-          String tableName =  resultSet.getString("table_name");
-          String columnName =  resultSet.getString("column_name");
+            while (resultSet.next()) {
+                String tableSchema = resultSet.getString("table_schema");
+                String constraintName = resultSet.getString("constraint_name");
+                String tableName = resultSet.getString("table_name");
+                String columnName = resultSet.getString("column_name");
+                String foreignTableSchema = resultSet.getString("foreign_table_schema");
+                String foreignTableName = resultSet.getString("foreign_table_name");
+                String foreignColumnName = resultSet.getString("foreign_column_name");
 
-          tables.put(tableName, columnName);
+                ForeignKey fk = new ForeignKey(
+                    tableSchema,
+                    constraintName,
+                    tableName,
+                    columnName,
+                    foreignTableSchema,
+                    foreignTableName,
+                    foreignColumnName
+                );
+
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to fetch foreign keys for schema: " + schema, e);
         }
 
-        return tables;
-      } catch (SQLException e) {
-        throw new RuntimeException(e);
-      }
+        // You can now do something with the list, for example:
+        this.foreignKeys = foreignKeys; // if you have a class field
+        // or return it if you prefer:
+        // return foreignKeys;
+    }
+
+    private Map<String, String> getPrimaryKeys() {
+        try (Connection connection = getConnection()) {
+            ResultSet resultSet = connection.prepareStatement(Static.QUERY_PRIMARY_KEYS.formatted(schema))
+                .executeQuery();
+
+            Map<String, String> tables = new HashMap<>();
+
+            while (resultSet.next()) {
+                String tableName = resultSet.getString("table_name");
+                String columnName = resultSet.getString("column_name");
+
+                tables.put(tableName, columnName);
+            }
+
+            return tables;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
