@@ -2,20 +2,16 @@ package org.rifaii.dbrng.db;
 
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
+import org.rifaii.dbrng.Constants;
 import org.rifaii.dbrng.CsvIteratorInputStream;
 import org.rifaii.dbrng.CsvRowIterator;
-import org.rifaii.dbrng.Static;
 import org.rifaii.dbrng.db.object.Column;
 import org.rifaii.dbrng.db.object.DbIntrospection;
 import org.rifaii.dbrng.db.object.ForeignKey;
 import org.rifaii.dbrng.db.object.Table;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 public class Db {
@@ -57,7 +53,7 @@ public class Db {
     private DbIntrospection introspectSchema() {
         Map<String, List<ForeignKey>> foreignKeys = getForeignKeys();
         try (Connection connection = getConnection()) {
-            ResultSet resultSet = connection.prepareStatement(Static.QUERY_SCHEMA_INTROSPECT.formatted(schema)).executeQuery();
+            ResultSet resultSet = connection.prepareStatement(Constants.QUERY_SCHEMA_INTROSPECT.formatted(schema)).executeQuery();
             Map<String, String> primaryKeys = getPrimaryKeys();
 
             Map<String, Table> tables = new HashMap<>();
@@ -135,7 +131,7 @@ public class Db {
 
         try (Connection connection = getConnection()) {
             ResultSet resultSet = connection
-                    .prepareStatement(Static.QUERY_FOREIGN_KEYS.formatted(schema))
+                    .prepareStatement(Constants.QUERY_FOREIGN_KEYS.formatted(schema))
                     .executeQuery();
 
             while (resultSet.next()) {
@@ -171,7 +167,7 @@ public class Db {
 
     private Map<String, String> getPrimaryKeys() {
         try (Connection connection = getConnection()) {
-            ResultSet resultSet = connection.prepareStatement(Static.QUERY_PRIMARY_KEYS.formatted(schema))
+            ResultSet resultSet = connection.prepareStatement(Constants.QUERY_PRIMARY_KEYS.formatted(schema))
                     .executeQuery();
 
             Map<String, String> tables = new HashMap<>();

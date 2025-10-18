@@ -2,16 +2,10 @@ package org.rifaii;
 
 import org.rifaii.dbrng.CsvRowIterator;
 import org.rifaii.dbrng.Generator;
-import org.rifaii.dbrng.Static;
 import org.rifaii.dbrng.db.Db;
-import org.rifaii.dbrng.db.object.Column;
 import org.rifaii.dbrng.db.object.DbIntrospection;
-import org.rifaii.dbrng.db.object.Table;
 
 import java.time.LocalTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class Main {
 
@@ -29,8 +23,6 @@ public class Main {
 
         dbIntrospection.getSuggestedInsertOrder()
             .stream()
-            //////////// remove ////////////////
-//            .filter(table -> !List.of("purchased_product").contains(table.tableName))
             .forEach(table -> {
                 var start = LocalTime.now();
                 CsvRowIterator generate = Generator.generate(table.getColumns(), rowsNum);
