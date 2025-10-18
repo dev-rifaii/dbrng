@@ -1,6 +1,6 @@
-package org.rifaii.dbrng;
+package org.rifaii.dbrng.db;
 
-public class Constants {
+public class Queries {
 
     public static final String QUERY_PRIMARY_KEYS =
         """

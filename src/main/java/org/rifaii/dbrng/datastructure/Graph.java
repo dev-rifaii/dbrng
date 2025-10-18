@@ -1,4 +1,4 @@
-package org.rifaii.dbrng.db;
+package org.rifaii.dbrng.datastructure;
 
 import java.util.*;
 import java.util.stream.Collectors;

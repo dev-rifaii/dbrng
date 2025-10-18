@@ -2,9 +2,9 @@ package org.rifaii.dbrng.db;
 
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
-import org.rifaii.dbrng.Constants;
-import org.rifaii.dbrng.CsvIteratorInputStream;
-import org.rifaii.dbrng.CsvRowIterator;
+import org.rifaii.dbrng.datastructure.Graph;
+import org.rifaii.dbrng.generator.CsvIteratorInputStream;
+import org.rifaii.dbrng.generator.CsvRowIterator;
 import org.rifaii.dbrng.db.object.Column;
 import org.rifaii.dbrng.db.object.DbIntrospection;
 import org.rifaii.dbrng.db.object.ForeignKey;
@@ -53,7 +53,7 @@ public class Db {
     private DbIntrospection introspectSchema() {
         Map<String, List<ForeignKey>> foreignKeys = getForeignKeys();
         try (Connection connection = getConnection()) {
-            ResultSet resultSet = connection.prepareStatement(Constants.QUERY_SCHEMA_INTROSPECT.formatted(schema)).executeQuery();
+            ResultSet resultSet = connection.prepareStatement(Queries.QUERY_SCHEMA_INTROSPECT.formatted(schema)).executeQuery();
             Map<String, String> primaryKeys = getPrimaryKeys();
 
             Map<String, Table> tables = new HashMap<>();
@@ -131,7 +131,7 @@ public class Db {
 
         try (Connection connection = getConnection()) {
             ResultSet resultSet = connection
-                    .prepareStatement(Constants.QUERY_FOREIGN_KEYS.formatted(schema))
+                    .prepareStatement(Queries.QUERY_FOREIGN_KEYS.formatted(schema))
                     .executeQuery();
 
             while (resultSet.next()) {
@@ -167,7 +167,7 @@ public class Db {
 
     private Map<String, String> getPrimaryKeys() {
         try (Connection connection = getConnection()) {
-            ResultSet resultSet = connection.prepareStatement(Constants.QUERY_PRIMARY_KEYS.formatted(schema))
+            ResultSet resultSet = connection.prepareStatement(Queries.QUERY_PRIMARY_KEYS.formatted(schema))
                     .executeQuery();
 
             Map<String, String> tables = new HashMap<>();

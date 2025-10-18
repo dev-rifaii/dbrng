@@ -1,6 +1,7 @@
 package org.rifaii.dbrng.db;
 
 import org.junit.jupiter.api.Test;
+import org.rifaii.dbrng.datastructure.Graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

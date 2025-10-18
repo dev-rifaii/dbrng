@@ -1,4 +1,4 @@
-package org.rifaii.dbrng;
+package org.rifaii.dbrng.generator;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;

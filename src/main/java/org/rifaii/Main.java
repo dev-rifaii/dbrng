@@ -1,7 +1,7 @@
 package org.rifaii;
 
-import org.rifaii.dbrng.CsvRowIterator;
-import org.rifaii.dbrng.Generator;
+import org.rifaii.dbrng.generator.CsvRowIterator;
+import org.rifaii.dbrng.generator.Generator;
 import org.rifaii.dbrng.db.Db;
 import org.rifaii.dbrng.db.object.DbIntrospection;
 

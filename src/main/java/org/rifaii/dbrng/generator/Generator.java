@@ -1,4 +1,4 @@
-package org.rifaii.dbrng;
+package org.rifaii.dbrng.generator;
 
 import org.rifaii.dbrng.db.object.Column;
 
