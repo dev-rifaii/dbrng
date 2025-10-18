@@ -16,10 +16,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Db {
 
@@ -40,19 +37,21 @@ public class Db {
 
     public DbIntrospection buildPlan() {
         DbIntrospection dbIntrospection = introspectSchema();
+        Collection<Table> allTables = dbIntrospection.getTables();
 
+        Graph<Table> graph = new Graph<>();
 
-        Map<Table, List<Table>> graph = new HashMap<>();
+        allTables.forEach(potentiallyDependentTable ->
+                potentiallyDependentTable.getForeignKeys().forEach(fk -> {
+                    Table foreignTable = allTables.stream().filter(tb -> tb.tableName.equals(fk.tableName)).findFirst().orElseThrow();
+                    graph.addNode(foreignTable, potentiallyDependentTable);
+                }));
 
-        dbIntrospection.getTables().stream().filter(Table::hasForeignKeys)
-                .forEach(table -> {
-
-                });
-
+        dbIntrospection.setSuggestedInsertOrder(graph.inTopologicalOrder());
         return dbIntrospection;
     }
 
-    public DbIntrospection introspectSchema() {
+    private DbIntrospection introspectSchema() {
         Map<String, List<ForeignKey>> foreignKeys = getForeignKeys();
         try (Connection connection = getConnection()) {
             ResultSet resultSet = connection.prepareStatement(Static.QUERY_SCHEMA_INTROSPECT.formatted(schema)).executeQuery();

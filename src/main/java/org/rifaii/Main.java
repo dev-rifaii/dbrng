@@ -17,7 +17,7 @@ public class Main {
 
     public static void main(String[] args) {
         Db db = new Db("postgres", "postgres", "localhost", "5432", "tracker_db", "public");
-        DbIntrospection dbIntrospection = db.introspectSchema();
+        DbIntrospection dbIntrospection = db.buildPlan();
         boolean connectionEstablished = db.isValidConnection();
         if (!connectionEstablished) {
             System.out.println("Could not establish connection to database, exiting.");
@@ -26,7 +26,7 @@ public class Main {
 
         var fullGenerationStart = LocalTime.now();
 
-        dbIntrospection.getTables()
+        dbIntrospection.getSuggestedInsertOrder()
             .stream()
             //////////// remove ////////////////
             .filter(table -> !List.of("purchased_product").contains(table.tableName))

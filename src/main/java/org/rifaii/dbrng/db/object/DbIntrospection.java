@@ -2,14 +2,12 @@ package org.rifaii.dbrng.db.object;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Queue;
 
 public class DbIntrospection {
 
    private final Collection<Table> tables;
-
-    public DbIntrospection() {
-        tables = new ArrayList<>();
-    }
+   private Queue<Table> suggestedInsertOrder;
 
     public DbIntrospection(Collection<Table> tables) {
         this.tables = tables;
@@ -23,4 +21,11 @@ public class DbIntrospection {
        return this.tables;
    }
 
+   public Queue<Table> getSuggestedInsertOrder() {
+        return this.suggestedInsertOrder;
+   }
+
+   public void setSuggestedInsertOrder(Queue<Table> suggestedInsertOrder) {
+        this.suggestedInsertOrder = suggestedInsertOrder;
+   }
 }
