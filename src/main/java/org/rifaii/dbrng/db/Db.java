@@ -31,17 +31,31 @@ public class Db {
         this.schema = schema;
 
         connectionUrl = "jdbc:postgresql://%s:%s/%s?user=%s&password=%s&ssl=false"
-            .formatted("localhost", port, database, username, password);
+                .formatted("localhost", port, database, username, password);
     }
 
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(connectionUrl);
     }
 
+    public DbIntrospection buildPlan() {
+        DbIntrospection dbIntrospection = introspectSchema();
+
+
+        Map<Table, List<Table>> graph = new HashMap<>();
+
+        dbIntrospection.getTables().stream().filter(Table::hasForeignKeys)
+                .forEach(table -> {
+
+                });
+
+        return dbIntrospection;
+    }
+
     public DbIntrospection introspectSchema() {
+        Map<String, List<ForeignKey>> foreignKeys = getForeignKeys();
         try (Connection connection = getConnection()) {
-            ResultSet resultSet = connection.prepareStatement(Static.QUERY_SCHEMA_INTROSPECT.formatted(schema))
-                .executeQuery();
+            ResultSet resultSet = connection.prepareStatement(Static.QUERY_SCHEMA_INTROSPECT.formatted(schema)).executeQuery();
             Map<String, String> primaryKeys = getPrimaryKeys();
 
             Map<String, Table> tables = new HashMap<>();
@@ -55,22 +69,24 @@ public class Db {
                 int columnSize = resultSet.getInt("character_maximum_length");
                 int numericPrecision = resultSet.getInt("numeric_precision");
 
+                List<ForeignKey> tableForeignKeys = foreignKeys.getOrDefault(tableName, new ArrayList<>());
+
                 var column = new Column();
                 column.columnName = columnName;
                 column.isNullable = isNullable;
                 column.columnType = type;
-                column.columnSize = columnSize > 0
-                    ? columnSize
-                    : 5;
-                column.isPrimaryKey = primaryKeys.containsKey(tableName) && primaryKeys.get(tableName)
-                    .equals(columnName);
+                column.columnSize = columnSize > 0 ? columnSize : 5;
+                column.isPrimaryKey = primaryKeys.containsKey(tableName) && primaryKeys.get(tableName).equals(columnName);
+                column.foreignKey = tableForeignKeys.stream()
+                        .filter(fk -> fk.columnName.equals(columnName)).findFirst().orElse(null);
 
                 tables.computeIfAbsent(tableName, k -> new Table(tableName))
-                    .addColumn(column);
+                        .addColumn(column)
+                        .setForeignKeys(tableForeignKeys);
             }
 
             tables.keySet()
-                .forEach(this::truncateTable);
+                    .forEach(this::truncateTable);
 
             return new DbIntrospection(tables.values());
         } catch (SQLException e) {
@@ -92,10 +108,10 @@ public class Db {
     public void copy(Table table, CsvRowIterator iterator) {
         try (Connection conn = getConnection()) {
             long rowsInserted = new CopyManager((BaseConnection) conn)
-                .copyIn(
-                    "COPY %s FROM STDIN (FORMAT csv)".formatted(table.tableName),
-                    new CsvIteratorInputStream(iterator)
-                );
+                    .copyIn(
+                            "COPY %s FROM STDIN (FORMAT csv)".formatted(table.tableName),
+                            new CsvIteratorInputStream(iterator)
+                    );
             System.out.printf("%d row(s) inserted%n", rowsInserted);
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
@@ -105,20 +121,20 @@ public class Db {
     public boolean isValidConnection() {
         try (Connection connection = getConnection()) {
             connection.prepareStatement("SELECT 1")
-                .executeQuery();
+                    .executeQuery();
             return true;
         } catch (SQLException e) {
             return false;
         }
     }
 
-    private void getForeignKeys() {
+    private Map<String, List<ForeignKey>> getForeignKeys() {
         Map<String, List<ForeignKey>> foreignKeys = new HashMap<>();
 
         try (Connection connection = getConnection()) {
             ResultSet resultSet = connection
-                .prepareStatement(Static.QUERY_FOREIGN_KEYS.formatted(schema))
-                .executeQuery();
+                    .prepareStatement(Static.QUERY_FOREIGN_KEYS.formatted(schema))
+                    .executeQuery();
 
             while (resultSet.next()) {
                 String tableSchema = resultSet.getString("table_schema");
@@ -130,14 +146,17 @@ public class Db {
                 String foreignColumnName = resultSet.getString("foreign_column_name");
 
                 ForeignKey fk = new ForeignKey(
-                    tableSchema,
-                    constraintName,
-                    tableName,
-                    columnName,
-                    foreignTableSchema,
-                    foreignTableName,
-                    foreignColumnName
+                        tableSchema,
+                        constraintName,
+                        tableName,
+                        columnName,
+                        foreignTableSchema,
+                        foreignTableName,
+                        foreignColumnName
                 );
+
+                foreignKeys.computeIfAbsent(tableName, k -> new ArrayList<>())
+                        .add(fk);
 
             }
 
@@ -145,16 +164,13 @@ public class Db {
             throw new RuntimeException("Failed to fetch foreign keys for schema: " + schema, e);
         }
 
-        // You can now do something with the list, for example:
-        this.foreignKeys = foreignKeys; // if you have a class field
-        // or return it if you prefer:
-        // return foreignKeys;
+        return foreignKeys;
     }
 
     private Map<String, String> getPrimaryKeys() {
         try (Connection connection = getConnection()) {
             ResultSet resultSet = connection.prepareStatement(Static.QUERY_PRIMARY_KEYS.formatted(schema))
-                .executeQuery();
+                    .executeQuery();
 
             Map<String, String> tables = new HashMap<>();
 

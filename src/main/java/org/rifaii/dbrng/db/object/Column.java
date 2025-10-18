@@ -7,5 +7,6 @@ public class Column {
     public int columnSize;
     public boolean isNullable;
     public boolean isPrimaryKey;
+    public ForeignKey foreignKey;
 
 }
