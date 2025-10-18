@@ -36,13 +36,13 @@ public class Generator {
         List<Supplier<String>> plan = new ArrayList<>();
         var random = new Random(System.currentTimeMillis());
         String formattedDate = formatter.format(LocalDateTime.now());
-        int pkCounter = 0;
 
         columnDetails.forEach(c -> {
             Queue<Integer> ids = new ArrayDeque<>();
             if (c.isPrimaryKey) {
                 IntStream.range(0, rowsNum).forEach(ids::add);
             }
+            int maxNumericColumnSize = (int) Math.pow(10, c.columnSize);
 
             switch (c.columnType) {
                 case "CHARACTER VARYING", "TEXT" -> plan.add(() -> new String(generateString(c.columnSize)));
@@ -50,7 +50,7 @@ public class Generator {
                 case "NUMERIC", "BIGINT" -> plan.add(
                     c.isPrimaryKey
                         ? () -> String.valueOf(ids.poll())
-                        : () -> String.valueOf(random.nextInt())
+                        : () -> String.valueOf(random.nextInt(maxNumericColumnSize))
                 );
                 default -> plan.add(() -> "");
             }

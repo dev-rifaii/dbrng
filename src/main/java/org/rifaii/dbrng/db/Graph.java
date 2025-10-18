@@ -7,9 +7,13 @@ public class Graph<T> {
 
     private final Map<T, Set<T>> GRAPH = new HashMap<>();
 
-    public void addNode(T from, T to) {
+    public void addEdge(T from, T to) {
         GRAPH.computeIfAbsent(from, k -> new HashSet<>()).add(to);
         GRAPH.computeIfAbsent(to, k -> new HashSet<>());
+    }
+
+    public void addNode(T node) {
+        GRAPH.computeIfAbsent(node, k -> new HashSet<>());
     }
 
     //https://en.wikipedia.org/wiki/Topological_sorting

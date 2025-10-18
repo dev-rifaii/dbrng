@@ -41,13 +41,16 @@ public class Db {
 
         Graph<Table> graph = new Graph<>();
 
-        allTables.forEach(potentiallyDependentTable ->
-                potentiallyDependentTable.getForeignKeys().forEach(fk -> {
-                    Table foreignTable = allTables.stream().filter(tb -> tb.tableName.equals(fk.tableName)).findFirst().orElseThrow();
-                    graph.addNode(foreignTable, potentiallyDependentTable);
-                }));
+        allTables.forEach(potentiallyDependentTable -> {
+            graph.addNode(potentiallyDependentTable);
+            potentiallyDependentTable.getForeignKeys().forEach(fk -> {
+                Table foreignTable = allTables.stream().filter(tb -> tb.tableName.equals(fk.foreignTableName)).findFirst().orElseThrow();
+                graph.addEdge(foreignTable, potentiallyDependentTable);
+            });
+        });
 
-        dbIntrospection.setSuggestedInsertOrder(graph.inTopologicalOrder());
+        Queue<Table> topologicalOrder = graph.inTopologicalOrder();
+        dbIntrospection.setSuggestedInsertOrder(topologicalOrder);
         return dbIntrospection;
     }
 

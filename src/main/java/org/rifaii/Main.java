@@ -16,6 +16,7 @@ import java.util.Set;
 public class Main {
 
     public static void main(String[] args) {
+        int rowsNum = 1_000;
         Db db = new Db("postgres", "postgres", "localhost", "5432", "tracker_db", "public");
         DbIntrospection dbIntrospection = db.buildPlan();
         boolean connectionEstablished = db.isValidConnection();
@@ -29,10 +30,10 @@ public class Main {
         dbIntrospection.getSuggestedInsertOrder()
             .stream()
             //////////// remove ////////////////
-            .filter(table -> !List.of("purchased_product").contains(table.tableName))
+//            .filter(table -> !List.of("purchased_product").contains(table.tableName))
             .forEach(table -> {
                 var start = LocalTime.now();
-                CsvRowIterator generate = Generator.generate(table.getColumns(), 1_000_000);
+                CsvRowIterator generate = Generator.generate(table.getColumns(), rowsNum);
                 db.copy(table, generate);
                 var end = LocalTime.now();
                 System.out.printf("=====%s=====%n", table.tableName);

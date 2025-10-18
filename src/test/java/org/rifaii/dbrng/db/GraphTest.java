@@ -2,12 +2,6 @@ package org.rifaii.dbrng.db;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.Queue;
-import java.util.Stack;
-import java.util.stream.Collectors;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GraphTest {
@@ -19,8 +13,8 @@ class GraphTest {
     @Test
     void inTopologicalOrderTest() {
         Graph<String> graph = new Graph<>();
-        graph.addNode("A", "B");
-        graph.addNode("B", "C");
+        graph.addEdge("A", "B");
+        graph.addEdge("B", "C");
 
         String order = String.join(",", graph.inTopologicalOrder());
 
