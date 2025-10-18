@@ -2,7 +2,11 @@ package org.rifaii.dbrng.db;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Queue;
+import java.util.Stack;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -18,9 +22,9 @@ class GraphTest {
         graph.addNode("A", "B");
         graph.addNode("B", "C");
 
-        List<String> order = graph.inTopologicalOrder();
+        String order = String.join(",", graph.inTopologicalOrder());
 
-        assertEquals(List.of("C", "B", "A"), order);
+        assertEquals("A,B,C", order);
     }
 
 }

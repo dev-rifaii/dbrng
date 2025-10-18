@@ -5,46 +5,52 @@ import java.util.stream.Collectors;
 
 public class Graph<T> {
 
-    Map<T, Set<T>> graph =  new HashMap<>();
+    private final Map<T, Set<T>> GRAPH = new HashMap<>();
 
     public void addNode(T from, T to) {
-        graph.computeIfAbsent(from, k -> new HashSet<>()).add(to);
+        GRAPH.computeIfAbsent(from, k -> new HashSet<>()).add(to);
+        GRAPH.computeIfAbsent(to, k -> new HashSet<>());
     }
 
     //https://en.wikipedia.org/wiki/Topological_sorting
-    public List<T> inTopologicalOrder() {
-        Map<T, Set<T>> graphClone = new HashMap<>(this.graph);
-        List<T> L = new ArrayList<>();
-        Set<T> S = getNoDepTs();
+    public Queue<T> inTopologicalOrder() {
+        Map<T, Integer> inDegrees = getInDegree();
 
-        while (!S.isEmpty()) {
-            T n = S.iterator().next();
-            S.remove(n);
-            L.add(n);
+        Queue<T> queue = new ArrayDeque<>();
+        inDegrees.forEach((node, inDegree) -> {
+            if (inDegree == 0) {
+                queue.add(node);
+            }
+        });
 
-            for (T m : graphClone.get(n)) {
-                S.remove(m);
+        Queue<T> order = new LinkedList<>();
 
-                if (hasNoIncomingEdges(graphClone, m)) {
-                    L.add(m);
+        while (!queue.isEmpty()) {
+            T node = queue.poll();
+            order.add(node);
+            Set<T> dependents = GRAPH.get(node);
+
+            for (T m : dependents) {
+                inDegrees.put(m, inDegrees.getOrDefault(m, 0) - 1);
+                if (inDegrees.get(m) <= 1) {
+                    queue.add(m);
                 }
             }
         }
-
-        return L;
+        return order;
     }
 
-    private boolean hasNoIncomingEdges(Map<T, Set<T>> graph, T table) {
-        return graph.values().stream().noneMatch(deps -> deps.contains(table));
-    }
+    private Map<T, Integer> getInDegree() {
+        Map<T, Integer> inDegree = new HashMap<>();
+        inDegree.putAll(GRAPH.keySet().stream().collect(Collectors.toMap(k -> k, k -> 0)));
 
-    private Set<T> getNoDepTs() {
-        Set<T> tablesWithDeps = graph.values().stream().flatMap(Collection::stream)
-                .collect(Collectors.toSet());
+        Set<T> dependents = GRAPH.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
 
-        return graph.keySet()
-                .stream()
-                .filter(table -> !tablesWithDeps.contains(table))
-                .collect(Collectors.toSet());
+        dependents.forEach(dependent -> GRAPH.keySet().forEach(node -> {
+            if (GRAPH.get(node).contains(dependent))
+                inDegree.put(dependent, inDegree.getOrDefault(node, 0) + 1);
+        }));
+
+        return inDegree;
     }
 }
