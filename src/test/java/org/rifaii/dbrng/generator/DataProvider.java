@@ -1,5 +1,6 @@
 package org.rifaii.dbrng.generator;
 
+import org.rifaii.dbrng.db.ColumnType;
 import org.rifaii.dbrng.db.object.Column;
 
 import java.util.List;
@@ -9,7 +10,7 @@ public class DataProvider {
     static final List<Column> columns = List.of(
             new Column() {{
                 columnName = "id";
-                columnType = "BIGINT";
+                columnType = ColumnType.NUMERIC;
                 columnSize = 20;
                 isNullable = false;
                 isPrimaryKey = true;
@@ -17,7 +18,7 @@ public class DataProvider {
             }},
             new Column() {{
                 columnName = "username";
-                columnType = "CHARACTER VARYING";
+                columnType = ColumnType.TEXT;
                 columnSize = 100;
                 isNullable = false;
                 isPrimaryKey = false;
@@ -25,7 +26,7 @@ public class DataProvider {
             }},
             new Column() {{
                 columnName = "email";
-                columnType = "TEXT";
+                columnType = ColumnType.TEXT;
                 columnSize = 0;
                 isNullable = true;
                 isPrimaryKey = false;
@@ -33,7 +34,7 @@ public class DataProvider {
             }},
             new Column() {{
                 columnName = "age";
-                columnType = "NUMERIC";
+                columnType = ColumnType.NUMERIC;
                 columnSize = 3;
                 isNullable = true;
                 isPrimaryKey = false;
@@ -41,7 +42,7 @@ public class DataProvider {
             }},
             new Column() {{
                 columnName = "balance";
-                columnType = "NUMERIC";
+                columnType = ColumnType.NUMERIC;
                 columnSize = 10;
                 isNullable = true;
                 isPrimaryKey = false;
@@ -49,7 +50,7 @@ public class DataProvider {
             }},
             new Column() {{
                 columnName = "description";
-                columnType = "TEXT";
+                columnType = ColumnType.TEXT;
                 columnSize = 0;
                 isNullable = true;
                 isPrimaryKey = false;

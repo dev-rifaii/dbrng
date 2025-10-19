@@ -74,7 +74,12 @@ public class Db {
                 var column = new Column();
                 column.columnName = columnName;
                 column.isNullable = isNullable;
-                column.columnType = type;
+                column.columnType = switch (type) {
+                    case "CHARACTER VARYING", "TEXT" -> ColumnType.TEXT;
+                    case "TIMESTAMP WITH TIME ZONE" -> ColumnType.TIMESTAMP;
+                    case "NUMERIC", "BIGINT" -> ColumnType.NUMERIC;
+                    default -> throw new IllegalStateException("Unexpected value: " + type);
+                };
                 column.columnSize = columnSize > 0 ? columnSize : 5;
                 column.isPrimaryKey = primaryKeys.containsKey(tableName) && primaryKeys.get(tableName).equals(columnName);
                 column.foreignKey = tableForeignKeys.stream()

@@ -54,10 +54,12 @@ public class Generator {
             c.setGenerator(() -> iteratorClone.next().toString());
 
             switch (c.columnType) {
-                case "CHARACTER VARYING" -> plan.add(() -> new String(generateString(c.columnSize)));
-                case "TEXT" -> plan.add(() -> new String(generateString(50)));
-                case "TIMESTAMP WITH TIME ZONE" -> plan.add(() -> formattedDate);
-                case "NUMERIC", "BIGINT" -> plan.add(
+                case TEXT -> {
+                    int maxStringSize = Math.max(c.columnSize, 5);
+                    plan.add(() -> new String(generateString(maxStringSize)));
+                }
+                case TIMESTAMP -> plan.add(() -> formattedDate);
+                case NUMERIC -> plan.add(
                         c.isPrimaryKey
                                 ? () -> String.valueOf(iterator.nextInt())
                                 : () -> String.valueOf(random.nextInt(maxNumericColumnSize))

@@ -1,11 +1,13 @@
 package org.rifaii.dbrng.db.object;
 
+import org.rifaii.dbrng.db.ColumnType;
+
 import java.util.function.Supplier;
 
 public class Column {
 
     public String columnName;
-    public String columnType;
+    public ColumnType columnType;
     public int columnSize;
     public boolean isNullable;
     public boolean isPrimaryKey;
