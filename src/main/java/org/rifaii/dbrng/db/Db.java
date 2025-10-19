@@ -112,7 +112,12 @@ public class Db {
     }
 
     public void copy(Table table, CsvRowIterator iterator) {
+        LOG.info("Creating a new connection to COPY into table [{}]", table.tableName);
         try (Connection conn = getConnection()) {
+
+            exec(conn, "ALTER SYSTEM SET max_wal_size='4096MB'");
+            exec(conn, "SELECT pg_reload_conf()");
+            LOG.info("Copying data into table [{}]", table.tableName);
             long rowsInserted = new CopyManager((BaseConnection) conn)
                     .copyIn(
                             "COPY %s FROM STDIN (FORMAT csv)".formatted(table.tableName),
@@ -171,6 +176,16 @@ public class Db {
         }
 
         return foreignKeys;
+    }
+
+    private void exec(Connection connection, String query) {
+        try {
+            Statement statement = connection.createStatement();
+            statement.execute(query);
+            statement.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Map<String, String> getPrimaryKeys() {

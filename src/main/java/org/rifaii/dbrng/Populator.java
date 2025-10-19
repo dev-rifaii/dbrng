@@ -14,9 +14,7 @@ import org.rifaii.dbrng.generator.LaggingIterator;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +43,11 @@ public class Populator {
         Collection<Table> tablesWithoutFk = allTables.stream().filter(table -> !table.hasForeignKeys()).toList();
 
         try (ExecutorService executor = Executors.newFixedThreadPool(tablesWithoutFk.size())) {
-            Collection<Runnable> copyCommands = tablesWithoutFk.stream().map(table -> (Runnable) () -> copyTable(db, table, rowsNum))
+            Collection<Runnable> copyCommands = tablesWithoutFk.stream()
+                    .map(table -> (Runnable) () -> {
+                        LOG.info("Start populating table {}", table.tableName);
+                        copyTable(db, table, rowsNum);
+                    })
                     .collect(Collectors.toCollection(ArrayList::new));
             copyCommands.forEach(executor::submit);
             executor.shutdown();
