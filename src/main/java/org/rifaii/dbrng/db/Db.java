@@ -78,6 +78,7 @@ public class Db {
                     case "CHARACTER VARYING", "TEXT" -> ColumnType.TEXT;
                     case "TIMESTAMP WITH TIME ZONE" -> ColumnType.TIMESTAMP;
                     case "NUMERIC", "BIGINT" -> ColumnType.NUMERIC;
+                    case "BYTEA" -> ColumnType.BYTEA;
                     default -> throw new IllegalStateException("Unexpected value: " + type);
                 };
                 column.columnSize = columnSize > 0 ? columnSize : 5;

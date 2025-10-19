@@ -8,6 +8,7 @@ public enum ColumnType {
     BIGINT,
     TIMESTAMP,
     DATETIME,
+    BYTEA
     ;
 
 //    private Integer size;

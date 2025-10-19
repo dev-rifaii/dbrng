@@ -50,8 +50,10 @@ public class Generator {
                 continue;
             }
 
-            PrimitiveIterator.OfInt iteratorClone = IntStream.range(1, rowsNum + 1).iterator();
-            c.setGenerator(() -> iteratorClone.next().toString());
+            if (c.isPrimaryKey) {
+                PrimitiveIterator.OfInt iteratorClone = IntStream.range(1, rowsNum + 1).iterator();
+                c.setGenerator(() -> iteratorClone.next().toString());
+            }
 
             switch (c.columnType) {
                 case TEXT -> {
