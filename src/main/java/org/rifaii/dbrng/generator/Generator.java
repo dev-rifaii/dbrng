@@ -33,24 +33,36 @@ public class Generator {
         var random = new Random(System.currentTimeMillis());
         String formattedDate = DATE_FORMATTER.format(LocalDateTime.now());
 
-        columnDetails.forEach(c -> {
-            Queue<Integer> ids = new ArrayDeque<>();
-            if (c.isPrimaryKey) {
-                IntStream.range(0, rowsNum).forEach(ids::add);
-            }
+        for (Column c : columnDetails) {
+            PrimitiveIterator.OfInt iterator = IntStream.range(1, rowsNum + 1).iterator();
             int maxNumericColumnSize = (int) Math.pow(10, c.columnSize);
+
+            //If table is a foreign table
+            if (c.foreignKey != null) {
+                Supplier<String> fkGenerator = c.getGenerator();
+                if (fkGenerator == null) {
+                    throw new IllegalStateException("Foreign key requires custom generator");
+                }
+
+                plan.add(fkGenerator);
+
+                continue;
+            }
+
+            PrimitiveIterator.OfInt iteratorClone = IntStream.range(1, rowsNum + 1).iterator();
+            c.setGenerator(() -> iteratorClone.next().toString());
 
             switch (c.columnType) {
                 case "CHARACTER VARYING", "TEXT" -> plan.add(() -> new String(generateString(c.columnSize)));
                 case "TIMESTAMP WITH TIME ZONE" -> plan.add(() -> formattedDate);
                 case "NUMERIC", "BIGINT" -> plan.add(
-                    c.isPrimaryKey
-                        ? () -> String.valueOf(ids.poll())
-                        : () -> String.valueOf(random.nextInt(maxNumericColumnSize))
+                        c.isPrimaryKey
+                                ? () -> String.valueOf(iterator.nextInt())
+                                : () -> String.valueOf(random.nextInt(maxNumericColumnSize))
                 );
                 default -> plan.add(() -> "");
             }
-        });
+        }
 
         return new CsvRowIterator(rowsNum, plan);
     }
