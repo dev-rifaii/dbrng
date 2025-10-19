@@ -1,5 +1,7 @@
 package org.rifaii.dbrng.db;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.rifaii.dbrng.datastructure.Graph;
@@ -16,8 +18,8 @@ import java.util.*;
 
 public class Db {
 
+    private static final Logger LOG = LogManager.getLogger(Db.class);
     private final String schema;
-
     private final String connectionUrl;
 
     public Db(String username, String password, String host, String port, String database, String schema) {
@@ -94,7 +96,7 @@ public class Db {
 
     private void truncateTable(String tableName) {
         try (Connection connection = getConnection()) {
-            System.out.println("Truncating table " + tableName);
+            LOG.info("Truncating table [{}]", tableName);
             PreparedStatement preparedStatement = connection.prepareStatement("TRUNCATE TABLE %s CASCADE;".formatted(tableName));
             preparedStatement.execute();
             preparedStatement.close();
@@ -110,7 +112,7 @@ public class Db {
                             "COPY %s FROM STDIN (FORMAT csv)".formatted(table.tableName),
                             new CsvIteratorInputStream(iterator)
                     );
-            System.out.printf("%d row(s) inserted%n", rowsInserted);
+            LOG.info("{} row(s) inserted to [{}]", rowsInserted, table.tableName);
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
         }
