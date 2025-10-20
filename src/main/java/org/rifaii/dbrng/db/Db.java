@@ -114,9 +114,11 @@ public class Db {
     public void copy(Table table, CsvRowIterator iterator) {
         LOG.info("Creating a new connection to COPY into table [{}]", table.tableName);
         try (Connection conn = getConnection()) {
-
             exec(conn, "ALTER SYSTEM SET max_wal_size='4096MB'");
+            exec(conn, "ALTER SYSTEM SET maintenance_work_mem='256MB'");
+            exec(conn, "ALTER SYSTEM SET archive_mode='off'");
             exec(conn, "SELECT pg_reload_conf()");
+
             LOG.info("Copying data into table [{}]", table.tableName);
             long rowsInserted = new CopyManager((BaseConnection) conn)
                     .copyIn(
@@ -124,6 +126,8 @@ public class Db {
                             new CsvIteratorInputStream(iterator)
                     );
             LOG.info("{} row(s) inserted to [{}]", rowsInserted, table.tableName);
+            exec(conn, "VACUUM ANALYZE;");
+            LOG.debug("Vacuum analyzed");
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
         }
