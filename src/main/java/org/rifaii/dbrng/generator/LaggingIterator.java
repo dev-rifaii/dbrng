@@ -3,19 +3,19 @@ package org.rifaii.dbrng.generator;
 import java.util.Iterator;
 import java.util.function.Supplier;
 
-public class LaggingIterator implements Iterator<String> {
+public class LaggingIterator implements Iterator<byte[]> {
 
     int lag;
     int currentCount = 1;
 
-    Supplier<String> generator;
-    String currentValue;
+    Supplier<byte[]> generator;
+    byte[] currentValue;
 
-    public LaggingIterator(Supplier<String> generator) {
+    public LaggingIterator(Supplier<byte[]> generator) {
         this(10, generator);
     }
 
-    public LaggingIterator(int lag, Supplier<String> generator) {
+    public LaggingIterator(int lag, Supplier<byte[]> generator) {
         this.lag = lag;
         this.generator = generator;
         currentValue = generator.get();
@@ -27,7 +27,7 @@ public class LaggingIterator implements Iterator<String> {
     }
 
     @Override
-    public String next() {
+    public byte[] next() {
         if (currentCount % lag == 0) {
             currentValue = generator.get();
         }

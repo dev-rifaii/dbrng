@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.rifaii.dbrng.datastructure.Graph;
+import org.rifaii.dbrng.generator.BinaryIteratorInputStream;
 import org.rifaii.dbrng.generator.CsvIteratorInputStream;
 import org.rifaii.dbrng.generator.CsvRowIterator;
 import org.rifaii.dbrng.db.object.Column;
@@ -62,6 +63,10 @@ public class Db {
 
             while (resultSet.next()) {
                 String tableName = resultSet.getString("table_name");
+                //TODO: Remove filter
+                if (!tableName.equals("generator_test")) {
+                    continue;
+                }
                 String columnName = resultSet.getString("column_name");
                 boolean isNullable = resultSet.getBoolean("nullable");
                 String columnDefault = resultSet.getString("column_default");
@@ -122,13 +127,14 @@ public class Db {
             LOG.info("Copying data into table [{}]", table.tableName);
             long rowsInserted = new CopyManager((BaseConnection) conn)
                     .copyIn(
-                            "COPY %s FROM STDIN (FORMAT csv)".formatted(table.tableName),
-                            new CsvIteratorInputStream(iterator)
+                            "COPY %s FROM STDIN (FORMAT BINARY)".formatted(table.tableName),
+                            new BinaryIteratorInputStream(iterator)
                     );
             LOG.info("{} row(s) inserted to [{}]", rowsInserted, table.tableName);
             exec(conn, "VACUUM ANALYZE;");
             LOG.debug("Vacuum analyzed");
         } catch (SQLException | IOException e) {
+            LOG.error("Error while copying data into table [{}]", table.tableName, e);
             throw new RuntimeException(e);
         }
     }

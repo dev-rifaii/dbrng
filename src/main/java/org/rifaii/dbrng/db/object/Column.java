@@ -14,11 +14,11 @@ public class Column {
     public ForeignKey foreignKey;
     private Config config;
 
-    public void setGenerator(Supplier<String> generator) {
+    public void setGenerator(Supplier<byte[]> generator) {
         config = new Config(generator);
     }
 
-    public Supplier<String> getGenerator() {
+    public Supplier<byte[]> getGenerator() {
         if (config.generator == null) {
             throw new RuntimeException("No generator exists for %s".formatted(columnName));
         }
@@ -26,9 +26,9 @@ public class Column {
     }
 
     public static class Config {
-        public Supplier<String> generator;
+        public Supplier<byte[]> generator;
 
-        public Config(Supplier<String> generator) {
+        public Config(Supplier<byte[]> generator) {
             this.generator = generator;
         }
     }

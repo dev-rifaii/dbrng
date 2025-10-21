@@ -99,7 +99,7 @@ public class Populator {
                     .findFirst()
                     .orElseThrow(RuntimeException::new);
 
-            Supplier<String> referencedColumnGenerator = referencedColumn.getGenerator();
+            Supplier<byte[]> referencedColumnGenerator = referencedColumn.getGenerator();
 
             LaggingIterator laggingIterator = new LaggingIterator(referencedColumnGenerator);
             columnWithForeignKey.setGenerator(laggingIterator::next);
