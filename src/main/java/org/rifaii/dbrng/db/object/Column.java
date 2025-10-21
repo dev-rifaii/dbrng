@@ -13,14 +13,19 @@ public class Column {
     public boolean isPrimaryKey;
     public ForeignKey foreignKey;
     private Config config;
+    //For numeric columns e.g primary keys
+    public boolean sequential = false;
 
     public void setGenerator(Supplier<String> generator) {
         config = new Config(generator);
     }
 
     public Supplier<String> getGenerator() {
-        if (config.generator == null) {
-            throw new RuntimeException("No generator exists for %s".formatted(columnName));
+//        if (config.generator == null) {
+//            throw new RuntimeException("No generator exists for %s".formatted(columnName));
+//        }
+        if (config == null) {
+            return null;
         }
         return this.config.generator;
     }

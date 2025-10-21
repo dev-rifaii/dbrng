@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.rifaii.dbrng.datastructure.Graph;
-import org.rifaii.dbrng.generator.CsvIteratorInputStream;
 import org.rifaii.dbrng.generator.CsvRowIterator;
 import org.rifaii.dbrng.db.object.Column;
 import org.rifaii.dbrng.db.object.DbIntrospection;
@@ -83,6 +82,9 @@ public class Db {
                 };
                 column.columnSize = columnSize > 0 ? columnSize : 5;
                 column.isPrimaryKey = primaryKeys.containsKey(tableName) && primaryKeys.get(tableName).equals(columnName);
+                if (column.isPrimaryKey) {
+                    column.sequential = true;
+                }
                 column.foreignKey = tableForeignKeys.stream()
                         .filter(fk -> fk.columnName.equals(columnName)).findFirst().orElse(null);
 

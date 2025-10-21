@@ -3,6 +3,11 @@ package org.rifaii.dbrng.generator;
 import java.util.Iterator;
 import java.util.function.Supplier;
 
+/**
+ * Passing the generator used for a primary key
+ * and using the same value a few times before moving to next
+ * one in order to have more than 1 row for that key.
+ */
 public class LaggingIterator implements Iterator<String> {
 
     int lag;

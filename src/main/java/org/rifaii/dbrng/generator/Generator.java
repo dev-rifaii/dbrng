@@ -1,5 +1,7 @@
 package org.rifaii.dbrng.generator;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.rifaii.dbrng.db.object.Column;
 
 import java.time.LocalDateTime;
@@ -8,68 +10,55 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+import static org.rifaii.dbrng.generator.generators.StringGenerator.generateString;
+
 public class Generator {
 
-    private static final Random RANDOM = new Random();
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS'Z'");
-    private static final char[] ALPHANUMERICS = {
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-    };
+    private static final Logger LOG  = LogManager.getLogger(Generator.class);
 
     private Generator() {
     }
 
-    private static char[] generateString(int length) {
-        char[] chars = new char[length];
-        for (int i = 0; i < length; i++) {
-            chars[i] = ALPHANUMERICS[RANDOM.nextInt(ALPHANUMERICS.length)];
-        }
-        return chars;
-    }
-
     public static CsvRowIterator generate(List<Column> columnDetails, int rowsNum) {
-        List<Supplier<String>> plan = new ArrayList<>();
+        final List<Supplier<String>> PLAN = new ArrayList<>();
         var random = new Random(System.currentTimeMillis());
-        String formattedDate = DATE_FORMATTER.format(LocalDateTime.now());
 
-        for (Column c : columnDetails) {
-            PrimitiveIterator.OfInt iterator = IntStream.range(1, rowsNum + 1).iterator();
-            int maxNumericColumnSize = (int) Math.pow(10, c.columnSize);
-
-            //If table is a foreign table
-            if (c.foreignKey != null) {
-                Supplier<String> fkGenerator = c.getGenerator();
-                if (fkGenerator == null) {
-                    throw new IllegalStateException("Foreign key requires custom generator");
-                }
-
-                plan.add(fkGenerator);
-
+        for (Column column : columnDetails) {
+            //In case of foreign key, use custom generator
+            if (column.getGenerator() != null) {
+                PLAN.add(column.getGenerator());
                 continue;
             }
 
-            if (c.isPrimaryKey) {
+            int maxNumericColumnSize = (int) Math.pow(10, column.columnSize);
+
+            if (column.sequential) {
                 PrimitiveIterator.OfInt iteratorClone = IntStream.range(1, rowsNum + 1).iterator();
-                c.setGenerator(() -> iteratorClone.next().toString());
+                column.setGenerator(() -> iteratorClone.next().toString());
             }
 
-            switch (c.columnType) {
+
+            PrimitiveIterator.OfInt iterator = IntStream.range(1, rowsNum + 1).iterator();
+
+            switch (column.columnType) {
                 case TEXT -> {
-                    int maxStringSize = Math.max(c.columnSize, 5);
-                    plan.add(() -> new String(generateString(maxStringSize)));
+                    int maxStringSize = Math.max(column.columnSize, 5);
+                    PLAN.add(() -> generateString(maxStringSize));
                 }
-                case TIMESTAMP -> plan.add(() -> formattedDate);
-                case NUMERIC -> plan.add(
-                        c.isPrimaryKey
-                                ? () -> String.valueOf(iterator.nextInt())
+                case TIMESTAMP -> {
+                    String formattedDate = DATE_FORMATTER.format(LocalDateTime.now());
+                    PLAN.add(() -> formattedDate);
+                }
+                case NUMERIC -> PLAN.add(
+                        column.sequential
+                                ? () -> iterator.next().toString()
                                 : () -> String.valueOf(random.nextInt(maxNumericColumnSize))
                 );
-                default -> plan.add(() -> "");
+                default -> PLAN.add(() -> "");
             }
         }
 
-        return new CsvRowIterator(rowsNum, plan);
+        return new CsvRowIterator(rowsNum, PLAN);
     }
 }
