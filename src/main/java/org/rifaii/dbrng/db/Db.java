@@ -21,6 +21,16 @@ public class Db {
     private final String schema;
     private final String connectionUrl;
 
+    public Db(String connectionUrl) {
+        this.connectionUrl = connectionUrl;
+        this.schema = "public";
+    }
+
+    public Db(String connectionUrl, String schema) {
+        this.connectionUrl = connectionUrl;
+        this.schema = schema;
+    }
+
     public Db(String username, String password, String host, String port, String database, String schema) {
         this.schema = schema;
 

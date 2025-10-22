@@ -26,10 +26,9 @@ public class Populator {
     private static final Logger LOG = LogManager.getLogger(Populator.class);
 
     //500k takes 23 seconds for 5 tables
-    public static void populate(int rowsNum) {
-        String targetDb = "dbrng_demo";
-        Db db = new Db("postgres", "postgres", "localhost", "5432", targetDb, "public");
-        LOG.info("Populating database {} with {} rows per table", targetDb, rowsNum);
+    public static void populate(String connectionUrl, int rowsNum) {
+        Db db = new Db(connectionUrl);
+        LOG.info("Populating database with {} rows per table", rowsNum);
         DbIntrospection dbIntrospection = db.buildPlan();
         boolean connectionEstablished = db.isValidConnection();
         if (!connectionEstablished) {
