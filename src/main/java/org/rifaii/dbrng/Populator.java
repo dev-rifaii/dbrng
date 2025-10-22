@@ -27,7 +27,7 @@ public class Populator {
 
     //500k takes 23 seconds for 5 tables
     public static void populate(int rowsNum) {
-        String targetDb = "tracker_db";
+        String targetDb = "dbrng_demo";
         Db db = new Db("postgres", "postgres", "localhost", "5432", targetDb, "public");
         LOG.info("Populating database {} with {} rows per table", targetDb, rowsNum);
         DbIntrospection dbIntrospection = db.buildPlan();
@@ -72,6 +72,7 @@ public class Populator {
 
         LOG.info("Started at {}", fullGenerationStart);
         LOG.info("Ended at {}", fullGenerationEnd);
+        LOG.info("Successfully populated {} tables with {} rows", allTables.size(), rowsNum * allTables.size());
     }
 
     private static void copyTable(Db db, Table table, int rowsNum) {

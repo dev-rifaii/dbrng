@@ -5,7 +5,7 @@ import org.rifaii.dbrng.Populator;
 public class Main {
 
     public static void main(String[] args) {
-        int rowsNum = 10;
+        int rowsNum = 1000;
         Populator.populate(rowsNum);
     }
 

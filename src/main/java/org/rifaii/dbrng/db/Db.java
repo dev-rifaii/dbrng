@@ -75,9 +75,12 @@ public class Db {
                 column.isNullable = isNullable;
                 column.columnType = switch (type) {
                     case "CHARACTER VARYING", "TEXT" -> ColumnType.TEXT;
-                    case "TIMESTAMP WITH TIME ZONE" -> ColumnType.TIMESTAMP;
-                    case "NUMERIC", "BIGINT" -> ColumnType.NUMERIC;
+                    case "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITHOUT TIME ZONE" -> ColumnType.TIMESTAMP;
+                    case "NUMERIC", "BIGINT", "INTEGER" -> ColumnType.NUMERIC;
+                    case "BOOLEAN" -> ColumnType.BOOLEAN;
+                    case "DATE" -> ColumnType.DATE;
                     case "BYTEA" -> ColumnType.BYTEA;
+                    case "UUID" -> ColumnType.UUID;
                     default -> throw new IllegalStateException("Unexpected value: " + type);
                 };
                 column.columnSize = columnSize > 0 ? columnSize : 5;

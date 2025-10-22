@@ -37,39 +37,44 @@ public class Generator {
 
             //If primary key
             if (column.sequential) {
-                PrimitiveIterator.OfInt iterator = IntStream.range(1, rowsNum + 1).iterator();
+                final PrimitiveIterator.OfInt iterator = IntStream.range(1, rowsNum + 1).iterator();
 
                 PLAN.add(() -> iterator.next().toString());
                 LOG.debug("Column {} is sequential, cloning interator",  column.columnName);
 
-                //Assign cloned iterator that can be used by a foreign key
+                //Assign cloned iterator that can be used to generate foreign key
                 //TODO: We might have an issue if 1 primary key has 2 foreign keys
-                PrimitiveIterator.OfInt iteratorClone = IntStream.range(1, rowsNum + 1).iterator();
+                final PrimitiveIterator.OfInt iteratorClone = IntStream.range(1, rowsNum + 1).iterator();
                 column.generator = () -> iteratorClone.next().toString();
                 continue;
             }
 
             switch (column.columnType) {
                 case TEXT -> {
-                    int maxStringSize = Math.max(column.columnSize, 5);
+                    final int maxStringSize = Math.max(column.columnSize, 5);
                     PLAN.add(() -> generateString(maxStringSize));
                 }
                 case TIMESTAMP -> {
-                    String formattedDate = DTIME_FORMATTER.format(LocalDateTime.now());
+                    final String formattedDate = DTIME_FORMATTER.format(LocalDateTime.now());
                     PLAN.add(() -> formattedDate);
                 }
                 case NUMERIC -> {
-                    var random = new Random(System.currentTimeMillis());
-                    int scale = (int) Math.pow(10, column.columnSize);
+                    final var random = new Random(System.currentTimeMillis());
+                    final int scale = (int) Math.pow(10, column.columnSize);
                     PLAN.add(() -> String.valueOf(random.nextInt(scale)));
                 }
                 case DATE -> {
-                    LocalDate now = LocalDate.now();
+                    final LocalDate now = LocalDate.now();
                     PLAN.add(now::toString);
                 }
                 case JSON -> {
-                    String emptyJson = "{}";
+                    final String emptyJson = "{}";
                     PLAN.add(() -> emptyJson);
+                }
+                case UUID -> PLAN.add(() -> UUID.randomUUID().toString());
+                case BOOLEAN -> {
+                    final Random BOOL_RANDOM = new Random();
+                    PLAN.add(() -> String.valueOf(BOOL_RANDOM.nextBoolean()));
                 }
                 default -> PLAN.add(() -> "");
             }
