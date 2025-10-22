@@ -52,6 +52,7 @@ public class Populator {
             executor.shutdown();
             executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
+            LOG.error("Interrupted while populating tables", e);
             throw new RuntimeException(e);
         }
 
@@ -75,13 +76,17 @@ public class Populator {
     }
 
     private static void copyTable(Db db, Table table, int rowsNum) {
-        var start = LocalTime.now();
-        CsvRowIterator generate = Generator.generate(table.getColumns(), rowsNum);
-        db.copy(table, generate);
-        var end = LocalTime.now();
-        System.out.printf("=====%s=====%n", table.tableName);
-        LOG.info("Started at {}", start);
-        LOG.info("Ended at {}", end);
+        try {
+            var start = LocalTime.now();
+            CsvRowIterator generate = Generator.generate(table.getColumns(), rowsNum);
+            db.copy(table, generate);
+            var end = LocalTime.now();
+            System.out.printf("=====%s=====%n", table.tableName);
+            LOG.info("Started at {}", start);
+            LOG.info("Ended at {}", end);
+        } catch (Exception ex) {
+            LOG.error(ex.getMessage(), ex);
+        }
     }
 
     private static void copyTable(Db db, Table table, int rowsNum, DbIntrospection dbIntrospection) {
