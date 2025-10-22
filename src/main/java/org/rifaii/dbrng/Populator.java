@@ -99,10 +99,10 @@ public class Populator {
                     .findFirst()
                     .orElseThrow(RuntimeException::new);
 
-            Supplier<String> referencedColumnGenerator = referencedColumn.getGenerator();
+            Supplier<String> referencedColumnGenerator = referencedColumn.generator;
 
             LaggingIterator laggingIterator = new LaggingIterator(referencedColumnGenerator);
-            columnWithForeignKey.setGenerator(laggingIterator::next);
+            columnWithForeignKey.generator = laggingIterator::next;
         });
         CsvRowIterator generate = Generator.generate(table.getColumns(), rowsNum);
         db.copy(table, generate);

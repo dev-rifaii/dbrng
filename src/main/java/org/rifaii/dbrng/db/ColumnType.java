@@ -8,18 +8,9 @@ public enum ColumnType {
     BIGINT,
     TIMESTAMP,
     DATETIME,
-    BYTEA
+    BYTEA,
+    DATE,
+    JSON,
     ;
 
-//    private Integer size;
-//
-//    public ColumnType withSize(Integer size) {
-//        this.size = size;
-//        return this;
-//    }
-//
-//
-//    ColumnType(Integer size) {
-//        this.size = size;
-//    }
 }
