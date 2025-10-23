@@ -51,7 +51,7 @@ public class Generator {
 
             switch (column.columnType) {
                 case TEXT -> {
-                    final int maxStringSize = Math.max(column.columnSize, 5);
+                    final int maxStringSize = Math.min(column.columnSize, 5);
                     PLAN.add(() -> generateString(maxStringSize));
                 }
                 case TIMESTAMP -> {

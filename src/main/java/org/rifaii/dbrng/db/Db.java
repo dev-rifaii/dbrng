@@ -150,6 +150,7 @@ public class Db implements AutoCloseable {
             LOG.info("[FINISH] Copying data into table [{}]", table.tableName);
             LOG.info("{} row(s) inserted to [{}]", rowsInserted, table.tableName);
         } catch (SQLException | IOException e) {
+            LOG.error("Failed to copy data into table [{}]", table.tableName, e);
             throw new RuntimeException(e);
         }
     }
