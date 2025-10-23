@@ -94,7 +94,11 @@ public class Db implements AutoCloseable {
                     case "CHARACTER" -> ColumnType.CHARACTER;
                     default -> throw new IllegalStateException("Unexpected value: " + type);
                 };
-                column.columnSize = columnSize > 0 ? columnSize : 5;
+                if (type.equals("SMALLINT")) {
+                    column.columnSize = 1;
+                } else {
+                    column.columnSize = columnSize > 0 ? columnSize : 5;
+                }
                 column.isPrimaryKey = primaryKeys.containsKey(tableName) && primaryKeys.get(tableName).equals(columnName);
                 if (column.isPrimaryKey) {
                     column.sequential = true;
@@ -144,7 +148,7 @@ public class Db implements AutoCloseable {
             LOG.info("[START] Copying data into table [{}]", table.tableName);
             long rowsInserted = new CopyManager((BaseConnection) conn)
                     .copyIn(
-                            "COPY %s.%s FROM STDIN (FORMAT csv)".formatted(schema, table.tableName),
+                            "COPY %s.%s FROM STDIN (FORMAT csv, QUOTE '\"')".formatted(schema, table.tableName),
                             new CsvIteratorInputStream(iterator)
                     );
             LOG.info("[FINISH] Copying data into table [{}]", table.tableName);
