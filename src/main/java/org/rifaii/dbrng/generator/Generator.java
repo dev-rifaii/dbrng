@@ -76,6 +76,20 @@ public class Generator {
                     final Random BOOL_RANDOM = new Random();
                     PLAN.add(() -> String.valueOf(BOOL_RANDOM.nextBoolean()));
                 }
+                case DATERANGE -> {
+                    LocalDate start = LocalDate.now().minusYears(1);
+                    LocalDate now = LocalDate.now();
+                    String range = "[%s,%s)".formatted(start, now);
+                    PLAN.add(() -> range);
+                }
+                case NUMERIC_RANGE -> {
+                    final int scale = (int) Math.pow(10, column.columnSize);
+                    final int min = 1;
+                    String range = "[%d,%d)".formatted(min, scale);
+                    PLAN.add(() -> range);
+                }
+                case ARRAY -> PLAN.add(() -> "{}");
+                case BYTEA -> PLAN.add(() -> "a");
                 default -> PLAN.add(() -> "");
             }
         }
