@@ -26,13 +26,10 @@ public class Populator {
 
     private static final Logger LOG = LogManager.getLogger(Populator.class);
 
-    public static void populate(String connectionUrl, int rowsNum) {
-        populate(connectionUrl, "public", rowsNum);
-    }
     //500k takes 23 seconds for 5 tables
-    public static void populate(String connectionUrl, String schema, int rowsNum) {
-        final Db db = new Db(connectionUrl, schema);
-        LOG.info("Populating database with {} rows per table", rowsNum);
+    public static void populate(Configuration configuration) {
+        final Db db = new Db(configuration);
+        LOG.info("Populating database with {} rows per table", configuration.getNumberOfRows());
         final DbIntrospection dbIntrospection = db.buildPlan();
         final boolean connectionEstablished = db.isValidConnection();
         if (!connectionEstablished) {
@@ -54,7 +51,7 @@ public class Populator {
             final Collection<Runnable> copyCommands = tablesWithoutFk.stream()
                     .map(table -> (Runnable) () -> {
                         LOG.info("Start populating table {}", table.tableName);
-                        copyTable(db, table, rowsNum);
+                        copyTable(db, table, configuration.getNumberOfRows());
                     })
                     .collect(Collectors.toCollection(ArrayList::new));
             copyCommands.forEach(executor::submit);
@@ -74,14 +71,14 @@ public class Populator {
                 continue;
             }
 
-            copyTable(db, table, rowsNum, dbIntrospection);
+            copyTable(db, table, configuration.getNumberOfRows(), dbIntrospection);
         }
 
         var fullGenerationEnd = LocalTime.now();
 
 
         Duration duration = Duration.between(fullGenerationStart, fullGenerationEnd);
-        LOG.info("Successfully populated {} tables with {} rows", allTables.size(), rowsNum * allTables.size());
+        LOG.info("Successfully populated {} tables with {} rows", allTables.size(), configuration.getNumberOfRows() * allTables.size());
         LOG.info("Populating database started at {} and ended at {}", fullGenerationStart, fullGenerationEnd);
         LOG.info("Time spent in seconds: {}", duration.getSeconds());
         db.close();

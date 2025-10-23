@@ -4,12 +4,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
+import org.rifaii.dbrng.Configuration;
 import org.rifaii.dbrng.datastructure.Graph;
-import org.rifaii.dbrng.generator.CsvRowIterator;
 import org.rifaii.dbrng.db.object.Column;
 import org.rifaii.dbrng.db.object.DbIntrospection;
 import org.rifaii.dbrng.db.object.ForeignKey;
 import org.rifaii.dbrng.db.object.Table;
+import org.rifaii.dbrng.generator.CsvRowIterator;
 
 import java.io.IOException;
 import java.sql.*;
@@ -20,22 +21,12 @@ public class Db implements AutoCloseable {
     private static final Logger LOG = LogManager.getLogger(Db.class);
     private final String schema;
     private final String connectionUrl;
+    private final Configuration configuration;
 
-    public Db(String connectionUrl) {
-        this.connectionUrl = connectionUrl;
-        this.schema = "public";
-    }
-
-    public Db(String connectionUrl, String schema) {
-        this.connectionUrl = connectionUrl;
-        this.schema = schema;
-    }
-
-    public Db(String username, String password, String host, String port, String database, String schema) {
-        this.schema = schema;
-
-        connectionUrl = "jdbc:postgresql://%s:%s/%s?user=%s&password=%s&ssl=false"
-                .formatted("localhost", port, database, username, password);
+    public Db(Configuration configuration) {
+        this.schema = configuration.getSchema();
+        this.connectionUrl = configuration.getConnectionUrl();
+        this.configuration = configuration;
     }
 
     private Connection getConnection() throws SQLException {
@@ -43,6 +34,7 @@ public class Db implements AutoCloseable {
     }
 
     public DbIntrospection buildPlan() {
+        LOG.info("Figuring out dependency graph");
         DbIntrospection dbIntrospection = introspectSchema();
         Collection<Table> allTables = dbIntrospection.getTables();
 
@@ -56,12 +48,15 @@ public class Db implements AutoCloseable {
             });
         });
 
+        LOG.info("Sorting tables in topological order");
         Queue<Table> topologicalOrder = graph.inTopologicalOrder();
         dbIntrospection.setSuggestedInsertOrder(topologicalOrder);
+        LOG.info("Finished building plan");
         return dbIntrospection;
     }
 
     private DbIntrospection introspectSchema() {
+        LOG.info("Starting introspection for schema [{}]", schema);
         Map<String, List<ForeignKey>> foreignKeys = getForeignKeys();
         try (Connection connection = getConnection()) {
             ResultSet resultSet = connection.prepareStatement(Queries.QUERY_SCHEMA_INTROSPECT.formatted(schema)).executeQuery();
@@ -112,9 +107,9 @@ public class Db implements AutoCloseable {
                         .setForeignKeys(tableForeignKeys);
             }
 
-//            tables.keySet()
-//                    .forEach(this::truncateTable);
+            tables.keySet().forEach(this::truncateTable);
 
+            LOG.info("Finished introspection for schema [{}]", schema);
             return new DbIntrospection(tables.values());
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -124,7 +119,7 @@ public class Db implements AutoCloseable {
     private void truncateTable(String tableName) {
         try (Connection connection = getConnection()) {
             LOG.info("Truncating table [{}]", tableName);
-            PreparedStatement preparedStatement = connection.prepareStatement("TRUNCATE TABLE %s CASCADE;".formatted(tableName));
+            PreparedStatement preparedStatement = connection.prepareStatement("TRUNCATE TABLE %s.%s CASCADE;".formatted(schema, tableName));
             preparedStatement.execute();
             preparedStatement.close();
         } catch (SQLException e) {
@@ -140,10 +135,16 @@ public class Db implements AutoCloseable {
             exec(conn, "ALTER SYSTEM SET archive_mode='off'");
             exec(conn, "SELECT pg_reload_conf()");
 
+            boolean continueCopying = configuration.runPreCopy(conn, table);
+
+            if (!continueCopying) {
+                return;
+            }
+
             LOG.info("[START] Copying data into table [{}]", table.tableName);
             long rowsInserted = new CopyManager((BaseConnection) conn)
                     .copyIn(
-                            "COPY %s FROM STDIN (FORMAT csv)".formatted(table.tableName),
+                            "COPY %s.%s FROM STDIN (FORMAT csv)".formatted(schema, table.tableName),
                             new CsvIteratorInputStream(iterator)
                     );
             LOG.info("[FINISH] Copying data into table [{}]", table.tableName);

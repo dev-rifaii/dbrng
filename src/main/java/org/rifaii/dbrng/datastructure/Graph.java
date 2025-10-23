@@ -1,9 +1,14 @@
 package org.rifaii.dbrng.datastructure;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Graph<T> {
+
+    private static final Logger LOG = LogManager.getLogger(Graph.class);
 
     private final Map<T, Set<T>> GRAPH = new HashMap<>();
 
@@ -36,11 +41,16 @@ public class Graph<T> {
 
             for (T m : dependents) {
                 inDegrees.put(m, inDegrees.getOrDefault(m, 0) - 1);
-                if (inDegrees.get(m) <= 1) {
+                if (inDegrees.get(m) == 0) {
                     queue.add(m);
                 }
             }
         }
+
+        if (order.size() < GRAPH.size()) {
+            LOG.warn("Graph has cycles, cannot be topologically sorted");
+        }
+
         return order;
     }
 
@@ -52,7 +62,7 @@ public class Graph<T> {
 
         dependents.forEach(dependent -> GRAPH.keySet().forEach(node -> {
             if (GRAPH.get(node).contains(dependent))
-                inDegree.put(dependent, inDegree.getOrDefault(node, 0) + 1);
+                inDegree.put(dependent, inDegree.getOrDefault(dependent, 0) + 1);
         }));
 
         return inDegree;
