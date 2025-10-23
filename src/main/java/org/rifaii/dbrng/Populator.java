@@ -13,7 +13,6 @@ import org.rifaii.dbrng.generator.LaggingIterator;
 
 import java.time.Duration;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Queue;
@@ -27,9 +26,12 @@ public class Populator {
 
     private static final Logger LOG = LogManager.getLogger(Populator.class);
 
-    //500k takes 23 seconds for 5 tables
     public static void populate(String connectionUrl, int rowsNum) {
-        final Db db = new Db(connectionUrl);
+        populate(connectionUrl, "public", rowsNum);
+    }
+    //500k takes 23 seconds for 5 tables
+    public static void populate(String connectionUrl, String schema, int rowsNum) {
+        final Db db = new Db(connectionUrl, schema);
         LOG.info("Populating database with {} rows per table", rowsNum);
         final DbIntrospection dbIntrospection = db.buildPlan();
         final boolean connectionEstablished = db.isValidConnection();
@@ -42,6 +44,11 @@ public class Populator {
 
         final Collection<Table> allTables = dbIntrospection.getTables();
         final Collection<Table> tablesWithoutFk = allTables.stream().filter(table -> !table.hasForeignKeys()).toList();
+
+        if (allTables.isEmpty()) {
+            LOG.error("No tables found in database, exiting gracefully");
+            System.exit(0);
+        }
 
         try (final ExecutorService executor = Executors.newFixedThreadPool(tablesWithoutFk.size())) {
             final Collection<Runnable> copyCommands = tablesWithoutFk.stream()

@@ -86,11 +86,17 @@ public class Db implements AutoCloseable {
                 column.columnType = switch (type) {
                     case "CHARACTER VARYING", "TEXT" -> ColumnType.TEXT;
                     case "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITHOUT TIME ZONE" -> ColumnType.TIMESTAMP;
-                    case "NUMERIC", "BIGINT", "INTEGER" -> ColumnType.NUMERIC;
+                    case "NUMERIC", "BIGINT", "INTEGER", "SMALLINT" -> ColumnType.NUMERIC;
                     case "BOOLEAN" -> ColumnType.BOOLEAN;
                     case "DATE" -> ColumnType.DATE;
                     case "BYTEA" -> ColumnType.BYTEA;
                     case "UUID" -> ColumnType.UUID;
+                    case "DATERANGE" -> ColumnType.DATERANGE;
+                    case "ARRAY" -> ColumnType.ARRAY;
+                    case "TSTZRANGE" -> ColumnType.TIMESTAMP_RANGE;
+                    case "NUMRANGE", "INT4RANGE" -> ColumnType.NUMERIC_RANGE;
+                    case "JSONB" -> ColumnType.JSON;
+                    case "CHARACTER" -> ColumnType.CHARACTER;
                     default -> throw new IllegalStateException("Unexpected value: " + type);
                 };
                 column.columnSize = columnSize > 0 ? columnSize : 5;
@@ -106,8 +112,8 @@ public class Db implements AutoCloseable {
                         .setForeignKeys(tableForeignKeys);
             }
 
-            tables.keySet()
-                    .forEach(this::truncateTable);
+//            tables.keySet()
+//                    .forEach(this::truncateTable);
 
             return new DbIntrospection(tables.values());
         } catch (SQLException e) {

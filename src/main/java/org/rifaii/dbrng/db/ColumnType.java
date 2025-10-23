@@ -11,6 +11,9 @@ public enum ColumnType {
     BYTEA,
     DATE,
     JSON,
-    BOOLEAN, UUID;
+    BOOLEAN,
+    UUID,
+    DATERANGE,
+    ARRAY, TIMESTAMP_RANGE, NUMERIC_RANGE, CHARACTER;
 
 }
