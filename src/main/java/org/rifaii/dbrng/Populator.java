@@ -11,7 +11,9 @@ import org.rifaii.dbrng.generator.CsvRowIterator;
 import org.rifaii.dbrng.generator.Generator;
 import org.rifaii.dbrng.generator.LaggingIterator;
 
+import java.time.Duration;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Queue;
@@ -27,22 +29,22 @@ public class Populator {
 
     //500k takes 23 seconds for 5 tables
     public static void populate(String connectionUrl, int rowsNum) {
-        Db db = new Db(connectionUrl);
+        final Db db = new Db(connectionUrl);
         LOG.info("Populating database with {} rows per table", rowsNum);
-        DbIntrospection dbIntrospection = db.buildPlan();
-        boolean connectionEstablished = db.isValidConnection();
+        final DbIntrospection dbIntrospection = db.buildPlan();
+        final boolean connectionEstablished = db.isValidConnection();
         if (!connectionEstablished) {
             LOG.info("Could not establish connection to database, exiting.");
             System.exit(1);
         }
 
-        var fullGenerationStart = LocalTime.now();
+        final var fullGenerationStart = LocalTime.now();
 
-        Collection<Table> allTables = dbIntrospection.getTables();
-        Collection<Table> tablesWithoutFk = allTables.stream().filter(table -> !table.hasForeignKeys()).toList();
+        final Collection<Table> allTables = dbIntrospection.getTables();
+        final Collection<Table> tablesWithoutFk = allTables.stream().filter(table -> !table.hasForeignKeys()).toList();
 
-        try (ExecutorService executor = Executors.newFixedThreadPool(tablesWithoutFk.size())) {
-            Collection<Runnable> copyCommands = tablesWithoutFk.stream()
+        try (final ExecutorService executor = Executors.newFixedThreadPool(tablesWithoutFk.size())) {
+            final Collection<Runnable> copyCommands = tablesWithoutFk.stream()
                     .map(table -> (Runnable) () -> {
                         LOG.info("Start populating table {}", table.tableName);
                         copyTable(db, table, rowsNum);
@@ -57,7 +59,7 @@ public class Populator {
         }
 
 
-        Queue<Table> suggestedInsertOrder = dbIntrospection.getSuggestedInsertOrder();
+        final Queue<Table> suggestedInsertOrder = dbIntrospection.getSuggestedInsertOrder();
         while (!suggestedInsertOrder.isEmpty()) {
             Table table = suggestedInsertOrder.poll();
 
@@ -70,27 +72,25 @@ public class Populator {
 
         var fullGenerationEnd = LocalTime.now();
 
-        LOG.info("Started at {}", fullGenerationStart);
-        LOG.info("Ended at {}", fullGenerationEnd);
+
+        Duration duration = Duration.between(fullGenerationStart, fullGenerationEnd);
         LOG.info("Successfully populated {} tables with {} rows", allTables.size(), rowsNum * allTables.size());
+        LOG.info("Populating database started at {} and ended at {}", fullGenerationStart, fullGenerationEnd);
+        LOG.info("Time spent in seconds: {}", duration.getSeconds());
+        db.close();
     }
 
     private static void copyTable(Db db, Table table, int rowsNum) {
         try {
-            var start = LocalTime.now();
             CsvRowIterator generate = Generator.generate(table.getColumns(), rowsNum);
             db.copy(table, generate);
-            var end = LocalTime.now();
             System.out.printf("=====%s=====%n", table.tableName);
-            LOG.info("Started at {}", start);
-            LOG.info("Ended at {}", end);
         } catch (Exception ex) {
             LOG.error(ex.getMessage(), ex);
         }
     }
 
     private static void copyTable(Db db, Table table, int rowsNum, DbIntrospection dbIntrospection) {
-        var start = LocalTime.now();
         table.getColumns().stream().filter(column -> column.foreignKey != null).forEach(columnWithForeignKey -> {
             ForeignKey fk = columnWithForeignKey.foreignKey;
 
@@ -111,9 +111,5 @@ public class Populator {
         });
         CsvRowIterator generate = Generator.generate(table.getColumns(), rowsNum);
         db.copy(table, generate);
-        var end = LocalTime.now();
-        System.out.printf("=====%s=====%n", table.tableName);
-        LOG.info("Started at {}", start);
-        LOG.info("Ended at {}", end);
     }
 }

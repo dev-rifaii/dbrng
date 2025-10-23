@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 
-public class Db {
+public class Db implements AutoCloseable {
 
     private static final Logger LOG = LogManager.getLogger(Db.class);
     private final String schema;
@@ -134,15 +134,14 @@ public class Db {
             exec(conn, "ALTER SYSTEM SET archive_mode='off'");
             exec(conn, "SELECT pg_reload_conf()");
 
-            LOG.info("Copying data into table [{}]", table.tableName);
+            LOG.info("[START] Copying data into table [{}]", table.tableName);
             long rowsInserted = new CopyManager((BaseConnection) conn)
                     .copyIn(
                             "COPY %s FROM STDIN (FORMAT csv)".formatted(table.tableName),
                             new CsvIteratorInputStream(iterator)
                     );
+            LOG.info("[FINISH] Copying data into table [{}]", table.tableName);
             LOG.info("{} row(s) inserted to [{}]", rowsInserted, table.tableName);
-            exec(conn, "VACUUM ANALYZE;");
-            LOG.debug("Vacuum analyzed");
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -227,4 +226,15 @@ public class Db {
         }
     }
 
+    @Override
+    public void close() {
+        try {
+            Connection conn = getConnection();
+            exec(conn, "VACUUM ANALYZE;");
+            LOG.debug("Vacuum analyzed");
+        } catch (SQLException e) {
+            LOG.error("Failed to close", e);
+            throw new RuntimeException(e);
+        }
+    }
 }
