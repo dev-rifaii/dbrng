@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -108,10 +109,11 @@ public class Populator {
                     .findFirst()
                     .orElseThrow(RuntimeException::new);
 
-            Supplier<String> referencedColumnGenerator = referencedColumn.generator;
+            Iterator<?> iterator = referencedColumn.generatorIteratorSupplier.get();
+            Supplier<String> referencedColumnGenerator = () -> iterator.next().toString();
 
             LaggingIterator laggingIterator = new LaggingIterator(referencedColumnGenerator);
-            columnWithForeignKey.generator = laggingIterator::next;
+            columnWithForeignKey.customGenerator = laggingIterator::next;
         });
         CsvRowIterator generate = Generator.generate(table.getColumns(), rowsNum);
         db.copy(table, generate);

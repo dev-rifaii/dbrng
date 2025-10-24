@@ -25,9 +25,9 @@ public class Generator {
 
         for (Column column : columnDetails) {
             //Use custom generator if present
-            if (column.generator != null) {
+            if (column.customGenerator != null) {
                 LOG.debug("Using custom generator for column {}", column.columnName);
-                PLAN.add(column.generator);
+                PLAN.add(column.customGenerator);
                 continue;
             } else {
                 //If it's a foreign key then custom generator (usually clone of primary key generator) is required
@@ -43,9 +43,7 @@ public class Generator {
                 LOG.debug("Column {} is sequential, cloning interator",  column.columnName);
 
                 //Assign cloned iterator that can be used to generate foreign key
-                //TODO: We might have an issue if 1 primary key has 2 foreign keys
-                final PrimitiveIterator.OfInt iteratorClone = IntStream.range(1, rowsNum + 1).iterator();
-                column.generator = () -> iteratorClone.next().toString();
+                column.generatorIteratorSupplier = () -> IntStream.range(1, rowsNum + 1).iterator();
                 continue;
             }
 

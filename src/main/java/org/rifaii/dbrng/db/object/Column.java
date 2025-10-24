@@ -2,6 +2,7 @@ package org.rifaii.dbrng.db.object;
 
 import org.rifaii.dbrng.db.ColumnType;
 
+import java.util.Iterator;
 import java.util.function.Supplier;
 
 public class Column {
@@ -16,7 +17,8 @@ public class Column {
     public boolean isNullable;
     public boolean isPrimaryKey;
     public ForeignKey foreignKey;
-    public Supplier<String> generator;
+    public Supplier<String> customGenerator;
+    public Supplier<Iterator<?>> generatorIteratorSupplier;
     public boolean sequential = false;
 
 }
