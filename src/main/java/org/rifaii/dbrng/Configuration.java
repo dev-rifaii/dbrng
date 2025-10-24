@@ -6,9 +6,9 @@ import java.sql.Connection;
 
 public abstract class Configuration {
 
-    private String connectionUrl;
-    private String schema;
-    private int numberOfRows;
+    private final String connectionUrl;
+    private final String schema;
+    private final int numberOfRows;
 
     public Configuration(String connectionUrl, int numberOfRows) {
         this(connectionUrl, "public", numberOfRows);
@@ -35,5 +35,9 @@ public abstract class Configuration {
 
     public int getNumberOfRows() {
         return numberOfRows;
+    }
+
+    public static Configuration of(String connectionUrl, int numberOfRows) {
+        return new Configuration(connectionUrl, numberOfRows) {};
     }
 }
