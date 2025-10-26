@@ -92,6 +92,7 @@ public class Db implements AutoCloseable {
                     case "NUMRANGE", "INT4RANGE" -> ColumnType.NUMERIC_RANGE;
                     case "JSONB" -> ColumnType.JSON;
                     case "CHARACTER" -> ColumnType.CHARACTER;
+                    case "INET" -> ColumnType.INET;
                     default -> throw new IllegalStateException("Unexpected value: " + type);
                 };
                 if (type.equals("SMALLINT")) {

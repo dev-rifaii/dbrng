@@ -86,7 +86,7 @@ public class Generator {
                     String range = "\"[%d,%d)\"".formatted(min, scale);
                     PLAN.add(() -> range);
                 }
-                case ARRAY -> PLAN.add(() -> "{}");
+                case ARRAY -> PLAN.add(() -> "{1}");
                 case BYTEA -> PLAN.add(() -> "a");
                 default -> PLAN.add(() -> "");
             }
