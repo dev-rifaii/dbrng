@@ -42,6 +42,6 @@ public class RngDbTest {
     @Order(1)
     @Test
     void test() {
-        Populator.populate(Configuration.of(JDBC_URL, 100_000));
+        Populator.populate(Configuration.of(JDBC_URL, 1_000_000));
     }
 }

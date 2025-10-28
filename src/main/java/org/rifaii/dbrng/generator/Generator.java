@@ -86,6 +86,10 @@ public class Generator {
                     String range = "\"[%d,%d)\"".formatted(min, scale);
                     PLAN.add(() -> range);
                 }
+                case CHARACTER -> {
+                    final int maxStringSize = Math.max(column.columnSize, 1);
+                    PLAN.add(() -> generateString(maxStringSize));
+                }
                 case ARRAY -> PLAN.add(() -> "{1}");
                 case BYTEA -> PLAN.add(() -> "a");
                 default -> PLAN.add(() -> "");

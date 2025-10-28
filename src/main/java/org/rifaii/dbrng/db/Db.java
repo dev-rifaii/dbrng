@@ -60,7 +60,7 @@ public class Db implements AutoCloseable {
         Map<String, List<ForeignKey>> foreignKeys = getForeignKeys();
         try (Connection connection = getConnection()) {
             ResultSet resultSet = connection.prepareStatement(Queries.QUERY_SCHEMA_INTROSPECT.formatted(schema)).executeQuery();
-            Map<String, String> primaryKeys = getPrimaryKeys();
+            Map<String, List<String>> primaryKeys = getPrimaryKeys();
 
             Map<String, Table> tables = new HashMap<>();
 
@@ -100,7 +100,7 @@ public class Db implements AutoCloseable {
                 } else {
                     column.columnSize = columnSize > 0 ? columnSize : 5;
                 }
-                column.isPrimaryKey = primaryKeys.containsKey(tableName) && primaryKeys.get(tableName).equals(columnName);
+                column.isPrimaryKey = primaryKeys.containsKey(tableName) && primaryKeys.get(tableName).contains(columnName);
                 if (column.isPrimaryKey) {
                     column.sequential = true;
                 }
@@ -219,18 +219,18 @@ public class Db implements AutoCloseable {
         }
     }
 
-    private Map<String, String> getPrimaryKeys() {
+    private Map<String, List<String>> getPrimaryKeys() {
         try (Connection connection = getConnection()) {
             ResultSet resultSet = connection.prepareStatement(Queries.QUERY_PRIMARY_KEYS.formatted(schema))
                     .executeQuery();
 
-            Map<String, String> tables = new HashMap<>();
+            Map<String, List<String>> tables = new HashMap<>();
 
             while (resultSet.next()) {
                 String tableName = resultSet.getString("table_name");
                 String columnName = resultSet.getString("column_name");
 
-                tables.put(tableName, columnName);
+                tables.computeIfAbsent(tableName, k -> new ArrayList<>()).add(columnName);
             }
 
             return tables;

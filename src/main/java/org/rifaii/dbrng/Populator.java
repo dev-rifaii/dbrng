@@ -112,8 +112,15 @@ public class Populator {
             Iterator<?> iterator = referencedColumn.generatorIteratorSupplier.get();
             Supplier<String> referencedColumnGenerator = () -> iterator.next().toString();
 
-            LaggingIterator laggingIterator = new LaggingIterator(referencedColumnGenerator);
-            columnWithForeignKey.customGenerator = laggingIterator::next;
+            //FK can be also be primary key
+            //Don't make iterator lag if it is
+            if (columnWithForeignKey.isPrimaryKey) {
+                columnWithForeignKey.customGenerator = referencedColumnGenerator;
+
+            } else {
+                LaggingIterator laggingIterator = new LaggingIterator(referencedColumnGenerator);
+                columnWithForeignKey.customGenerator = laggingIterator::next;
+            }
         });
         CsvRowIterator generate = Generator.generate(table.getColumns(), rowsNum);
         db.copy(table, generate);
