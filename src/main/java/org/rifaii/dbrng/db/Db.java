@@ -107,6 +107,11 @@ public class Db implements AutoCloseable {
                 column.foreignKey = tableForeignKeys.stream()
                         .filter(fk -> fk.columnName.equals(columnName)).findFirst().orElse(null);
 
+                Map<String, List<Column.Constraint>> tableColumnsConstraints = getTableColumnsConstraints(tableName);
+                List<Column.Constraint> columnConstraints = tableColumnsConstraints.get(columnName);
+                if (columnConstraints != null && !columnConstraints.isEmpty())
+                    column.constraints.addAll(columnConstraints);
+
                 tables.computeIfAbsent(tableName, k -> new Table(tableName))
                         .addColumn(column)
                         .setForeignKeys(tableForeignKeys);
@@ -234,6 +239,38 @@ public class Db implements AutoCloseable {
             }
 
             return tables;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Map<String, List<Column.Constraint>> getTableColumnsConstraints(String tableName) {
+        try (Connection connection = getConnection()) {
+            ResultSet resultSet = connection.prepareStatement(Queries.QUERY_COLUMN_CONSTRAINTS.formatted(tableName))
+                    .executeQuery();
+
+            Map<String, List<Column.Constraint>> columns = new HashMap<>();
+
+            while (resultSet.next()) {
+                String columnName = resultSet.getString("column_name");
+                String constraintName = resultSet.getString("constraint_name");
+                String constraintType = resultSet.getString("constraint_type");
+                String checkClause = resultSet.getString("check_clause");
+
+                Column.Constraint.Type constraintTypeEnum = switch (resultSet.getString("constraint_type")) {
+                    case "CHECK" -> Column.Constraint.Type.CHECK;
+                    case "UNIQUE" -> Column.Constraint.Type.UNIQUE;
+                    case "PRIMARY KEY" -> Column.Constraint.Type.PRIMARY_KEY;
+                    case "FOREIGN KEY" -> Column.Constraint.Type.FOREIGN_KEY;
+                    default -> throw new RuntimeException("Unknown constraint type: " + constraintType);
+                };
+
+                columns.computeIfAbsent(columnName, k -> new ArrayList<>()).add(
+                        new Column.Constraint(constraintName, constraintTypeEnum, columnName, checkClause)
+                );
+            }
+
+            return columns;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

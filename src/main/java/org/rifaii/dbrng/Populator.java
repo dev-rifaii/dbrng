@@ -114,7 +114,7 @@ public class Populator {
 
             //FK can be also be primary key
             //Don't make iterator lag if it is
-            if (columnWithForeignKey.isPrimaryKey) {
+            if (columnWithForeignKey.isPrimaryKey || columnWithForeignKey.isUnique()) {
                 columnWithForeignKey.customGenerator = referencedColumnGenerator;
 
             } else {
