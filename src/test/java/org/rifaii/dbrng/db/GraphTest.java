@@ -3,10 +3,6 @@ package org.rifaii.dbrng.db;
 import org.junit.jupiter.api.Test;
 import org.rifaii.dbrng.datastructure.Graph;
 
-import java.util.PrimitiveIterator;
-import java.util.function.IntConsumer;
-import java.util.stream.IntStream;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GraphTest {

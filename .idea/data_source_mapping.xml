@@ -5,6 +5,8 @@
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/a446b493-5605-483e-b9b3-0df862b6c2ba/console_1.sql" value="a446b493-5605-483e-b9b3-0df862b6c2ba" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/a446b493-5605-483e-b9b3-0df862b6c2ba/console_2.sql" value="a446b493-5605-483e-b9b3-0df862b6c2ba" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/a446b493-5605-483e-b9b3-0df862b6c2ba/console_3.sql" value="a446b493-5605-483e-b9b3-0df862b6c2ba" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/a446b493-5605-483e-b9b3-0df862b6c2ba/console_4.sql" value="a446b493-5605-483e-b9b3-0df862b6c2ba" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/a446b493-5605-483e-b9b3-0df862b6c2ba/console_5.sql" value="a446b493-5605-483e-b9b3-0df862b6c2ba" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/e8703f75-c1dc-4c10-9db9-a62de5f1972a/console.sql" value="e8703f75-c1dc-4c10-9db9-a62de5f1972a" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/e8703f75-c1dc-4c10-9db9-a62de5f1972a/console_1.sql" value="e8703f75-c1dc-4c10-9db9-a62de5f1972a" />
     <file url="file://$PROJECT_DIR$/src/test/resources/setup/dummy-bank.sql" value="a446b493-5605-483e-b9b3-0df862b6c2ba" />

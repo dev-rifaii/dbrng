@@ -19,12 +19,10 @@ import java.util.*;
 public class Db implements AutoCloseable {
 
     private static final Logger LOG = LogManager.getLogger(Db.class);
-    private final String schema;
     private final String connectionUrl;
     private final Configuration configuration;
 
     public Db(Configuration configuration) {
-        this.schema = configuration.getSchema();
         this.connectionUrl = configuration.getConnectionUrl();
         this.configuration = configuration;
     }
@@ -56,15 +54,16 @@ public class Db implements AutoCloseable {
     }
 
     private DbIntrospection introspectSchema() {
-        LOG.info("Starting introspection for schema [{}]", schema);
+        LOG.info("Starting introspection");
         Map<String, List<ForeignKey>> foreignKeys = getForeignKeys();
         try (Connection connection = getConnection()) {
-            ResultSet resultSet = connection.prepareStatement(Queries.QUERY_SCHEMA_INTROSPECT.formatted(schema)).executeQuery();
+            ResultSet resultSet = connection.prepareStatement(Queries.QUERY_SCHEMA_INTROSPECT).executeQuery();
             Map<String, List<String>> primaryKeys = getPrimaryKeys();
 
             Map<String, Table> tables = new HashMap<>();
 
             while (resultSet.next()) {
+                String tableSchema = resultSet.getString("table_schema");
                 String tableName = resultSet.getString("table_name");
                 String columnName = resultSet.getString("column_name");
                 boolean isNullable = resultSet.getBoolean("nullable");
@@ -112,24 +111,26 @@ public class Db implements AutoCloseable {
                 if (columnConstraints != null && !columnConstraints.isEmpty())
                     column.constraints.addAll(columnConstraints);
 
-                tables.computeIfAbsent(tableName, k -> new Table(tableName))
+                tables.computeIfAbsent(tableName, k -> new Table(tableSchema, tableName))
                         .addColumn(column)
                         .setForeignKeys(tableForeignKeys);
             }
 
-            tables.keySet().forEach(this::truncateTable);
+            tables.values().forEach(this::truncateTable);
 
-            LOG.info("Finished introspection for schema [{}]", schema);
+            LOG.info("Finished introspection");
             return new DbIntrospection(tables.values());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void truncateTable(String tableName) {
+    private void truncateTable(Table table) {
         try (Connection connection = getConnection()) {
-            LOG.info("Truncating table [{}]", tableName);
-            PreparedStatement preparedStatement = connection.prepareStatement("TRUNCATE TABLE %s.%s CASCADE;".formatted(schema, tableName));
+            LOG.info("Truncating table [{}]", table.tableName);
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                    "TRUNCATE TABLE %s.%s CASCADE;".formatted(table.schemaName, table.tableName)
+            );
             preparedStatement.execute();
             preparedStatement.close();
         } catch (SQLException e) {
@@ -154,7 +155,7 @@ public class Db implements AutoCloseable {
             LOG.info("[START] Copying data into table [{}]", table.tableName);
             long rowsInserted = new CopyManager((BaseConnection) conn)
                     .copyIn(
-                            "COPY %s.%s FROM STDIN (FORMAT csv, QUOTE '\"')".formatted(schema, table.tableName),
+                            "COPY %s.%s FROM STDIN (FORMAT csv, QUOTE '\"')".formatted(table.schemaName, table.tableName),
                             new CsvIteratorInputStream(iterator)
                     );
             LOG.info("[FINISH] Copying data into table [{}]", table.tableName);
@@ -180,7 +181,7 @@ public class Db implements AutoCloseable {
 
         try (Connection connection = getConnection()) {
             ResultSet resultSet = connection
-                    .prepareStatement(Queries.QUERY_FOREIGN_KEYS.formatted(schema))
+                    .prepareStatement(Queries.QUERY_FOREIGN_KEYS)
                     .executeQuery();
 
             while (resultSet.next()) {
@@ -208,7 +209,7 @@ public class Db implements AutoCloseable {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch foreign keys for schema: " + schema, e);
+            throw new RuntimeException("Failed to fetch foreign keys", e);
         }
 
         return foreignKeys;
@@ -226,7 +227,7 @@ public class Db implements AutoCloseable {
 
     private Map<String, List<String>> getPrimaryKeys() {
         try (Connection connection = getConnection()) {
-            ResultSet resultSet = connection.prepareStatement(Queries.QUERY_PRIMARY_KEYS.formatted(schema))
+            ResultSet resultSet = connection.prepareStatement(Queries.QUERY_PRIMARY_KEYS)
                     .executeQuery();
 
             Map<String, List<String>> tables = new HashMap<>();

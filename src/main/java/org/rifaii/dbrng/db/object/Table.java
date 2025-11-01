@@ -6,11 +6,13 @@ import java.util.Objects;
 
 public class Table {
 
+    public final String schemaName;
     public final String tableName;
     private List<Column> columns = new ArrayList<>();
     private List<ForeignKey> foreignKeys = new ArrayList<>();
 
-    public Table(String tableName) {
+    public Table(String schemaName, String tableName) {
+        this.schemaName = schemaName;
         this.tableName = tableName;
     }
 
@@ -35,15 +37,16 @@ public class Table {
         return columns;
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Table table = (Table) o;
-        return Objects.equals(tableName, table.tableName);
+        return Objects.equals(schemaName, table.schemaName) && Objects.equals(tableName, table.tableName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(tableName);
+        return Objects.hash(schemaName, tableName);
     }
 }
