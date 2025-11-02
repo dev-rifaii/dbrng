@@ -42,6 +42,8 @@ public class RngDbTest {
     @Order(1)
     @Test
     void test() {
-        Populator.populate(Configuration.of(JDBC_URL, 1_000_000));
+        int rowsCount = 100_000;
+        Populator.populate(Configuration.of(JDBC_URL, rowsCount));
+        Util.assertCountMatches(JDBC_URL, rowsCount);
     }
 }

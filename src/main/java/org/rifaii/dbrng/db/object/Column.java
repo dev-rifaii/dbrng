@@ -36,6 +36,7 @@ public class Column {
         public Type constraintType;
         public String columnName;
         public String rawCheckClause;
+        public Check check;
 
         public static class Check {
             public String biggerThanExclusive;
