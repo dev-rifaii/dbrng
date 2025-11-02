@@ -27,7 +27,7 @@ public class DataProvider {
             new Column() {{
                 columnName = "email";
                 columnType = ColumnType.TEXT;
-                columnSize = 0;
+                columnSize = 20;
                 isNullable = true;
                 isPrimaryKey = false;
                 foreignKey = null;
@@ -51,7 +51,7 @@ public class DataProvider {
             new Column() {{
                 columnName = "description";
                 columnType = ColumnType.TEXT;
-                columnSize = 0;
+                columnSize = 20;
                 isNullable = true;
                 isPrimaryKey = false;
                 foreignKey = null;

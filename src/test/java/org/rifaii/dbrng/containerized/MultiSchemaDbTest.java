@@ -36,7 +36,7 @@ public class MultiSchemaDbTest {
     @Order(1)
     @Test
     void test() {
-        int rowsCount = 10;
+        int rowsCount = 50;
         Populator.populate(new Configuration(JDBC_URL, "people", rowsCount) {});
         Util.assertCountMatches(JDBC_URL, rowsCount);
     }
