@@ -23,6 +23,7 @@ public class Column {
     public Supplier<Iterator<?>> generatorIteratorSupplier;
     public boolean sequential = false;
     public List<Constraint> constraints = new ArrayList<>();
+    public int countTarget;
 
     public boolean isUnique() {
         return constraints.stream()

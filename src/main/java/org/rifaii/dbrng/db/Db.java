@@ -111,6 +111,14 @@ public class Db implements AutoCloseable {
                 if (columnConstraints != null && !columnConstraints.isEmpty())
                     column.constraints.addAll(columnConstraints);
 
+                column.countTarget = configuration.getNumberOfRows();
+
+                configuration.findForColumn("%s.%s.%s".formatted(tableSchema, tableName, columnName))
+                        .ifPresent(customConfig -> {
+                            column.customGenerator = customConfig.generator();
+                        });
+
+
                 tables.computeIfAbsent(tableName, k -> new Table(tableSchema, tableName))
                         .addColumn(column)
                         .setForeignKeys(tableForeignKeys);
@@ -257,10 +265,6 @@ public class Db implements AutoCloseable {
                 String constraintName = resultSet.getString("constraint_name");
                 String constraintType = resultSet.getString("constraint_type");
                 String checkClause = resultSet.getString("check_clause");
-                if (checkClause != null && !checkClause.contains("NULL")) {
-                    System.out.println("#CHECK#");
-                    System.out.println(checkClause);
-                }
 
                 Column.Constraint.Type constraintTypeEnum = switch (resultSet.getString("constraint_type")) {
                     case "CHECK" -> Column.Constraint.Type.CHECK;
