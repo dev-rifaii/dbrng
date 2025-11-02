@@ -27,16 +27,12 @@ public class Populator {
 
     private static final Logger LOG = LogManager.getLogger(Populator.class);
 
-    //500k takes 23 seconds for 5 tables
     public static void populate(Configuration configuration) {
         final Db db = new Db(configuration);
+        validateConnection(db);
+
         LOG.info("Populating database with {} rows per table", configuration.getNumberOfRows());
         final DbIntrospection dbIntrospection = db.buildPlan();
-        final boolean connectionEstablished = db.isValidConnection();
-        if (!connectionEstablished) {
-            LOG.info("Could not establish connection to database, exiting.");
-            System.exit(1);
-        }
 
         final var fullGenerationStart = LocalTime.now();
 
@@ -63,7 +59,6 @@ public class Populator {
             throw new RuntimeException(e);
         }
 
-
         final Queue<Table> suggestedInsertOrder = dbIntrospection.getSuggestedInsertOrder();
         while (!suggestedInsertOrder.isEmpty()) {
             Table table = suggestedInsertOrder.poll();
@@ -76,7 +71,6 @@ public class Populator {
         }
 
         var fullGenerationEnd = LocalTime.now();
-
 
         Duration duration = Duration.between(fullGenerationStart, fullGenerationEnd);
         LOG.info("Successfully populated {} tables with {} rows", allTables.size(), configuration.getNumberOfRows() * allTables.size());
@@ -124,5 +118,14 @@ public class Populator {
         });
         CsvRowIterator generate = Generator.generate(table.getColumns(), rowsNum);
         db.copy(table, generate);
+    }
+
+    private static void validateConnection(Db db) {
+        final boolean connectionEstablished = db.isValidConnection();
+        if (!connectionEstablished) {
+            LOG.info("Could not establish connection to database, exiting.");
+            System.exit(1);
+        }
+
     }
 }

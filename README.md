@@ -51,6 +51,9 @@ Populator.populate(config);
 
 ## TODO:
 
-- [ ] custom rows count per table
 - [ ] CHECK constraint support
+- [ ] custom rows count per table
 - [ ] Support all postgres data types
+- [ ] Randomise dates/timestamps
+- [ ] Randomise JSON generation
+- [ ] Randomise BYTEA generation

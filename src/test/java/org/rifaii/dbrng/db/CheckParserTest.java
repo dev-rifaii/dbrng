@@ -2,8 +2,6 @@ package org.rifaii.dbrng.db;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class CheckParserTest {
 
     //((decimal_places >= 0) AND (decimal_places <= 6))

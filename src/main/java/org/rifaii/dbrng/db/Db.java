@@ -34,6 +34,16 @@ public class Db implements AutoCloseable {
     public DbIntrospection buildPlan() {
         LOG.info("Figuring out dependency graph");
         DbIntrospection dbIntrospection = introspectSchema();
+        Graph<Table> graph = getTableGraph(dbIntrospection);
+
+        LOG.info("Sorting tables in topological order");
+        Queue<Table> topologicalOrder = graph.inTopologicalOrder();
+        dbIntrospection.setSuggestedInsertOrder(topologicalOrder);
+        LOG.info("Finished building plan");
+        return dbIntrospection;
+    }
+
+    private static Graph<Table> getTableGraph(DbIntrospection dbIntrospection) {
         Collection<Table> allTables = dbIntrospection.getTables();
 
         Graph<Table> graph = new Graph<>();
@@ -45,12 +55,7 @@ public class Db implements AutoCloseable {
                 graph.addEdge(foreignTable, potentiallyDependentTable);
             });
         });
-
-        LOG.info("Sorting tables in topological order");
-        Queue<Table> topologicalOrder = graph.inTopologicalOrder();
-        dbIntrospection.setSuggestedInsertOrder(topologicalOrder);
-        LOG.info("Finished building plan");
-        return dbIntrospection;
+        return graph;
     }
 
     private DbIntrospection introspectSchema() {
@@ -80,7 +85,7 @@ public class Db implements AutoCloseable {
                 column.columnType = switch (type) {
                     case "CHARACTER VARYING", "TEXT" -> ColumnType.TEXT;
                     case "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITHOUT TIME ZONE" -> ColumnType.TIMESTAMP;
-                    case "NUMERIC", "BIGINT", "INTEGER", "SMALLINT" -> ColumnType.NUMERIC;
+                    case "NUMERIC", "BIGINT", "INTEGER", "SMALLINT", "DECIMAL", "SERIAL", "BIGSERIAL" -> ColumnType.NUMERIC;
                     case "BOOLEAN" -> ColumnType.BOOLEAN;
                     case "DATE" -> ColumnType.DATE;
                     case "BYTEA" -> ColumnType.BYTEA;

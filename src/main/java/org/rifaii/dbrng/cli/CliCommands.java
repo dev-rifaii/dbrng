@@ -2,7 +2,6 @@ package org.rifaii.dbrng.cli;
 
 import org.rifaii.dbrng.Configuration;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CliCommands {
