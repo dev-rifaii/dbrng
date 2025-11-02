@@ -4,6 +4,14 @@ A tool for populating PostgresSQL databases with random data
 
 ## Usage:
 
+### Building:
+
+Due to testcontainers usage, tests require a docker environment so it's recommended to skip tests when building.
+
+```shell
+./gradlew build -x test
+```
+
 ### CLI:
 ```bash
 java dbrng.jar -U username -P password -c 10
