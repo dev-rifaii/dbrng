@@ -18,7 +18,8 @@ public class Generator {
     private static final DateTimeFormatter DTIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS'Z'");
     private static final Logger LOG = LogManager.getLogger(Generator.class);
 
-    private Generator() {}
+    private Generator() {
+    }
 
     public static CsvRowIterator generate(List<Column> columnDetails, int rowsNum) {
         final List<Supplier<String>> PLAN = new ArrayList<>();
@@ -40,7 +41,7 @@ public class Generator {
                 final PrimitiveIterator.OfInt iterator = IntStream.range(1, rowsNum + 1).iterator();
 
                 PLAN.add(() -> iterator.next().toString());
-                LOG.debug("Column {} is sequential, cloning interator",  column.columnName);
+                LOG.debug("Column {} is sequential, cloning interator", column.columnName);
 
                 //Assign cloned iterator that can be used to generate foreign key
                 column.generatorIteratorSupplier = () -> IntStream.range(1, rowsNum + 1).iterator();
